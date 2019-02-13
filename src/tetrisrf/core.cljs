@@ -7,6 +7,7 @@
               move-right
               place-tetramino
               rotate-90cw
+              rotate-90ccw
               save-prev-tetromino]]
             [tetrisrf.db :refer [initial-db]]
             [tetrisrf.tetrominos :refer [tetrominos]]
@@ -23,41 +24,47 @@
 
 
 (rf/reg-event-db
- :key-down
- (fn [db [_ key]]
+ :action
+ (fn [db [_ action]]
    (let [redrawn? (:redrawn db)]
      (if redrawn?
        (let [field (:field db)]
-         (case key
-             " "          (let [tetromino (rand-nth tetrominos)]
-                            (if (can-act? field #(place-tetramino %1 tetromino))
-                              (assoc db
-                                     :field (place-tetramino field tetromino)
-                                     :redrawn false)
-                              db))
-             "ArrowRight" (if (can-act? field move-right)
-                            (-> db
-                                (update :field move-right)
-                                (assoc :redrawn false))
-                            db)
-             "ArrowLeft"  (if (can-act? field move-left)
-                            (-> db
-                                (update :field move-left)
-                                (assoc :redrawn false))
-                            db)
-             "ArrowDown"  (if (can-act? field move-down)
-                            (-> db
-                                (update :field move-down)
-                                (assoc :redrawn false))
-                            db)
-             "ArrowUp"    (if (can-act? field rotate-90cw)
-                            (-> db
-                                (update :field rotate-90cw)
-                                (assoc :redrawn false))
-                            db)
-             "Enter"      (-> db
-                              (update :field assoc :tetromino nil :tetromino-prev nil :cells [])
+         (case action
+           :action-drop (let [tetromino (rand-nth tetrominos)]
+                          (if (can-act? field #(place-tetramino %1 tetromino))
+                            (assoc db
+                                   :field (place-tetramino field tetromino)
+                                   :redrawn false)
+                            db))
+           :action-right (if (can-act? field move-right)
+                           (-> db
+                               (update :field move-right)
+                               (assoc :redrawn false))
+                           db)
+           :action-left (if (can-act? field move-left)
+                          (-> db
+                              (update :field move-left)
                               (assoc :redrawn false))
+                          db)
+           :action-down (if (can-act? field move-down)
+                          (-> db
+                              (update :field move-down)
+                              (assoc :redrawn false))
+                          db)
+           :action-rotate-cw (if (can-act? field rotate-90cw)
+                               (-> db
+                                   (update :field rotate-90cw)
+                                   (assoc :redrawn false))
+                               db)
+           :action-rotate-ccw (if (can-act? field rotate-90ccw)
+                                (-> db
+                                    (update :field rotate-90ccw)
+                                    (assoc :redrawn false))
+                                db)
+           :action-exit (-> db
+                            (update :field assoc :tetromino nil :tetromino-prev nil :cells [])
+                            (assoc :redrawn false))
+           :action-pause db
              db))
        db))))
 

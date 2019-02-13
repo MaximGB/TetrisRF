@@ -14,6 +14,7 @@
                 #{"ArrowRight"}     :action-right
                 #{"ArrowUp"}        :action-rotate-cw
                 #{"ArrowUp" :shift} :action-rotate-ccw
+                #{"ArrowDown"}      :action-down
                 #{" "}              :action-drop
                 #{"Enter"}          :action-pause
                 #{"Escape"}         :action-exit})
