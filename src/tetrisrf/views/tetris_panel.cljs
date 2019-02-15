@@ -25,7 +25,7 @@
   (let [key (build-key e)
         action (get keys key)]
     (if action
-      (rf/dispatch [:action action]))))
+      (rf/dispatch [action]))))
 
 
 (defn tetris-panel []
