@@ -6,10 +6,9 @@
 (def empty-field {:width  10
                   :height 20
                   :cell-size [10 10]
-                  :tetramino-prev nil
                   :tetramino nil
                   :cells []})
 
 (def initial-db {:field empty-field
-                 :redrawn true
+                 :runing false
                  :timer (create-timer default-timer-interval (fn [] (rf/dispatch [:tick])))})

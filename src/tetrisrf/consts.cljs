@@ -1,6 +1,6 @@
 (ns tetrisrf.consts)
 
-(def default-timer-interval 1000)
+(def default-timer-interval 500)
 
 (def color-white "rgb(255, 255, 255)")
 
@@ -16,7 +16,7 @@
                 #{"ArrowUp" :shift} :action-rotate-ccw
                 #{"ArrowDown"}      :action-down
                 #{" "}              :action-drop
-                #{"Enter"}          :action-pause
+                #{"Enter"}          :action-run-stop
                 #{"Escape"}         :action-exit})
 
 ;; TODO: gestures

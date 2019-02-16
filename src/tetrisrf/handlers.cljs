@@ -4,6 +4,7 @@
              :refer
              [blend-tetramino
               can-act?
+              has-tetramino?
               move-down
               move-left
               move-right
@@ -19,25 +20,24 @@
    initial-db))
 
 
-;; TODO: temporary implementation for visual testing
-(rf/reg-event-db
- :action-drop
- (fn [db]
-   (let [field (:field db)
+(rf/reg-event-fx
+ :action-new
+ (fn [cofx]
+   (let [db (:db cofx)
+         field (:field db)
          tetramino (rand-nth tetraminos)]
      (if (can-act? field #(place-tetramino %1 tetramino))
-       (assoc db :field (place-tetramino field tetramino))
+       {:db (assoc db :field (place-tetramino field tetramino))}
        (do (print "Game over!")
-           (assoc db :field (-> (:field db)
-                                (assoc :cells nil
-                                       :tetramino-prev :nil))))))))
+           {:stop-timer (:timer db)
+            :db (assoc db :running? false)})))))
 
 
 (rf/reg-event-db
  :action-left
  (fn [db]
    (let [field (:field db)]
-     (if (can-act? field move-left)
+     (if (and (has-tetramino? field) (can-act? field move-left))
        (update db :field move-left)
        db))))
 
@@ -46,7 +46,7 @@
  :action-right
  (fn [db _]
    (let [field (:field db)]
-     (if (can-act? field move-right)
+     (if (and (has-tetramino? field) (can-act? field move-right))
        (update db :field move-right)
        db))))
 
@@ -55,16 +55,18 @@
  :action-down
  (fn [db]
    (let [field (:field db)]
-     (if (can-act? field move-down)
-       (update db :field move-down)
-       (update db :field blend-tetramino)))))
+     (if (has-tetramino? field)
+       (if (can-act? field move-down)
+         (update db :field move-down)
+         (update db :field blend-tetramino))
+       db))))
 
 
 (rf/reg-event-db
  :action-rotate-cw
  (fn [db]
    (let [field (:field db)]
-     (if (can-act? field rotate-90cw)
+     (if (and (has-tetramino? field) (can-act? field rotate-90cw))
        (update db :field rotate-90cw)
        db))))
 
@@ -73,12 +75,33 @@
  :action-rotate-ccw
  (fn [db]
    (let [field (:field db)]
-     (if (can-act? field rotate-90ccw)
+     (if (and (has-tetramino? field) (can-act? field rotate-90ccw))
        (update db :field rotate-90ccw)
        db))))
 
 
 (rf/reg-event-fx
+ :action-run-stop
+ (fn [cofx]
+   (let [db (:db cofx)
+         running? (:running? db)
+         timer (:timer db)]
+     (if running?
+       {:stop-timer timer
+        :db (assoc db :running? false)}
+       {:start-timer timer
+        :db (assoc db
+                   :running? true
+                   :field (assoc (:field db) :cells []))
+        :dispatch [:action-new]}))))
+
+
+(rf/reg-event-fx
  :tick
- (fn [db [_]]
-   (print "tick")))
+ (fn [cofx]
+   (let [db (:db cofx)
+         field (:field db)]
+     (if (and (has-tetramino? field) (can-act? field move-down))
+       {:db (update db :field move-down)}
+       {:db (update db :field blend-tetramino)
+        :dispatch [:action-new]}))))

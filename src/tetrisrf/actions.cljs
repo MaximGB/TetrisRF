@@ -114,5 +114,9 @@
       true)))
 
 
+(defn has-tetramino? [field]
+  (not (nil? (:tetramino field))))
+
+
 (defn can-act? [field action]
   (validate-field (action field)))
