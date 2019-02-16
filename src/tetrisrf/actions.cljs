@@ -9,46 +9,46 @@
               transformation-rotate90ccw
               transformation-rotate90cw]]))
 
-(defn save-prev-tetromino [field]
-  (assoc field :tetromino-prev (:tetromino field)))
+(defn save-prev-tetramino [field]
+  (assoc field :tetramino-prev (:tetramino field)))
 
 
-(defn reset-prev-tetromino [field]
-  (assoc field :tetromino-prev nil))
+(defn reset-prev-tetramino [field]
+  (assoc field :tetramino-prev nil))
 
 
 (defn move-left [field]
   (-> field
-      (update-in [:tetromino :cells] matrix/mmul (transformation-move-left))
-      (update-in [:tetromino :x] dec)))
+      (update-in [:tetramino :cells] matrix/mmul (transformation-move-left))
+      (update-in [:tetramino :x] dec)))
 
 
 (defn move-right [field]
   (-> field
-      (update-in [:tetromino :cells] matrix/mmul (transformation-move-right))
-      (update-in [:tetromino :x] inc)))
+      (update-in [:tetramino :cells] matrix/mmul (transformation-move-right))
+      (update-in [:tetramino :x] inc)))
 
 
 (defn move-down [field]
   (-> field
-      (update-in [:tetromino :cells] matrix/mmul (transformation-move-down))
-      (update-in [:tetromino :y] inc)))
+      (update-in [:tetramino :cells] matrix/mmul (transformation-move-down))
+      (update-in [:tetramino :y] inc)))
 
 (defn rotate [field rotation-transformation]
-  (let [tetromino (:tetromino field)
-        x      (:x tetromino)
-        y      (:y tetromino)
-        width  (:width tetromino)
-        height (:height tetromino)
-        [pivot-x pivot-y] (:pivot tetromino)
+  (let [tetramino (:tetramino field)
+        x      (:x tetramino)
+        y      (:y tetramino)
+        width  (:width tetramino)
+        height (:height tetramino)
+        [pivot-x pivot-y] (:pivot tetramino)
         offset-x (+ x pivot-x)
         offset-y (+ y pivot-y)
-        cells (-> (:cells tetromino)
+        cells (-> (:cells tetramino)
                   (matrix/mmul (transformation-move (- offset-x) (- offset-y)))
                   (matrix/mmul (rotation-transformation))
                   (matrix/mmul (transformation-move offset-x offset-y)))]
     (-> field
-        (update :tetromino
+        (update :tetramino
                 #(conj %1 {:cells  cells
                            :width  height
                            :height width})))))
@@ -63,55 +63,64 @@
 
 
 (defn place-tetramino
-  ([field tetromino]
+  ([field tetramino]
    (let [field-width (:width field)
-         tetromino-width (:width tetromino)
-         initial-x (quot (- field-width tetromino-width) 2)
+         tetramino-width (:width tetramino)
+         initial-x (quot (- field-width tetramino-width) 2)
          initial-y 0]
-     (place-tetramino field tetromino initial-x initial-y)))
-  ([field tetromino initial-x initial-y]
-   (let [initial-cells (:cells tetromino)]
-     (-> field
-         (assoc :tetromino-prev nil)
-         (assoc :tetromino
-                (conj tetromino
-                      {:cells (matrix/mmul initial-cells (transformation-move initial-x initial-y))
-                       :x initial-x
-                       :y initial-y}))))))
+     (place-tetramino field tetramino initial-x initial-y)))
+  ([field tetramino initial-x initial-y]
+   (let [initial-cells (:cells tetramino)]
+     (assoc field
+            :tetramino-prev nil
+            :tetramino (conj tetramino
+                             {:cells (matrix/mmul initial-cells (transformation-move initial-x initial-y))
+                              :x initial-x
+                              :y initial-y})))))
+
+
+(defn blend-tetramino [field]
+  (let [tetramino (:tetramino field)]
+    (assoc field
+           :tetramino-prev :tetramino
+           :tetramino nil
+           :cells (into (:cells field) (:cells tetramino) ))))
 
 
 (defn validate-field [field]
   (let [field-width (:width field)
         field-height (:height field)
         field-cells (:cells field)
-        tetromino-cells (get-in field [:tetromino :cells])
-        tetromino-cell-min-x (reduce (fn [r, [x]]
-                                       (if (< r x) r x))
-                                     (.-MAX_SAFE_INTEGER js/Number)
-                                     tetromino-cells)
-        tetromino-cell-max-x (reduce (fn [r, [x]]
-                                       (if (< r x) x r))
-                                     (.-MIN_SAFE_INTEGER js/Number)
-                                     tetromino-cells)
-        tetromino-cell-max-y (reduce (fn [r, [_, y]]
-                                       (if (< r y) y r))
-                                     (.-MIN_SAFE_INTEGER js/Number)
-                                     tetromino-cells)]
-    (and
-     ; Tetromino min x is 0 or more
-     (<= 0 tetromino-cell-min-x)
-     ; Tetromino max x is less then field width
-     (<  tetromino-cell-max-x field-width)
-     ; Tetromino max y is less then field height
-     (<  tetromino-cell-max-y field-height)
-     ; Non of tetromino cells intersects with field cells
-     (every? (fn [[fx fy]]
-               (every? (fn [[tx ty]]
-                         (print "[" tx "," ty "] - [" fx "," fy "]")
-                         (and (not= fx tx)
-                              (not= fy ty)))
-                       tetromino-cells))
-             field-cells))))
+        tetramino (:tetramino field)]
+    (if tetramino
+      (let [tetramino-cells (:cells tetramino)
+            tetramino-cell-min-x (reduce (fn [r [x]]
+                                           (if (< r x) r x))
+                                         (.-MAX_SAFE_INTEGER js/Number)
+                                         tetramino-cells)
+            tetramino-cell-max-x (reduce (fn [r [x]]
+                                           (if (< r x) x r))
+                                         (.-MIN_SAFE_INTEGER js/Number)
+                                         tetramino-cells)
+            tetramino-cell-max-y (reduce (fn [r [_ y]]
+                                           (if (< r y) y r))
+                                         (.-MIN_SAFE_INTEGER js/Number)
+                                         tetramino-cells)]
+        (and
+         ;; Tetramino min x is 0 or more
+         (<= 0 tetramino-cell-min-x)
+         ;; Tetramino max x is less then field width
+         (<  tetramino-cell-max-x field-width)
+         ;; Tetramino max y is less then field height
+         (<  tetramino-cell-max-y field-height)
+         ;; Non of tetramino cells intersects with field cells
+         (every? (fn [[fx fy]]
+                   (every? (fn [[tx ty]]
+                             (or (not= fx tx)
+                                 (not= fy ty)))
+                           tetramino-cells))
+                 field-cells)))
+      true)))
 
 
 (defn can-act? [field action]

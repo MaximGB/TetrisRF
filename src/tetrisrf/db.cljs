@@ -6,8 +6,8 @@
 (def empty-field {:width  10
                   :height 20
                   :cell-size [10 10]
-                  :tetromino-prev nil
-                  :tetromino nil
+                  :tetramino-prev nil
+                  :tetramino nil
                   :cells []})
 
 (def initial-db {:field empty-field

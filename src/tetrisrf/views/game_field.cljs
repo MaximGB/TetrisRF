@@ -11,16 +11,16 @@
     (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)))
 
 
-(defn draw-tetromino!
-  ([ctx2d cellwh tetromino]
-   (draw-tetromino! ctx2d cellwh tetromino color-red))
-  ([ctx2d cellwh tetromino color]
-   (doseq [cell (:cells tetromino)]
+(defn draw-tetramino!
+  ([ctx2d cellwh tetramino]
+   (draw-tetramino! ctx2d cellwh tetramino color-red))
+  ([ctx2d cellwh tetramino color]
+   (doseq [cell (:cells tetramino)]
      (draw-cell! ctx2d cellwh cell color))))
 
 
-(defn erase-tetromino! [ctx2d cellwh tetromino]
-  (draw-tetromino! ctx2d cellwh tetromino color-white))
+(defn erase-tetramino! [ctx2d cellwh tetramino]
+  (draw-tetramino! ctx2d cellwh tetramino color-white))
 
 
 (defn draw-cells!
@@ -37,16 +37,16 @@
 
 (defn draw-field! [canvas cell-size field]
   (let [ctx2d (.getContext canvas "2d")
-        tetromino (:tetromino field)
-        tetromino-prev (:tetromino-prev field)]
-    (when tetromino-prev
-      (erase-tetromino! ctx2d
+        tetramino (:tetramino field)
+        tetramino-prev (:tetramino-prev field)]
+    (when tetramino-prev
+      (erase-tetramino! ctx2d
                         cell-size
-                        tetromino-prev))
-    (when tetromino
-      (draw-tetromino! ctx2d
+                        tetramino-prev))
+    (when tetramino
+      (draw-tetramino! ctx2d
                        cell-size
-                       tetromino))
+                       tetramino))
     (draw-cells! ctx2d cell-size (:cells field))))
 
 

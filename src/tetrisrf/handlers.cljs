@@ -2,16 +2,17 @@
   (:require [re-frame.core :as rf]
             [tetrisrf.actions
              :refer
-             [can-act?
+             [blend-tetramino
+              can-act?
               move-down
               move-left
               move-right
               place-tetramino
               rotate-90ccw
               rotate-90cw
-              save-prev-tetromino]]
+              save-prev-tetramino]]
             [tetrisrf.db :refer [initial-db]]
-            [tetrisrf.tetrominos :refer [tetrominos]]))
+            [tetrisrf.tetraminos :refer [tetraminos]]))
 
 (rf/reg-event-db
  :initialize-db
@@ -28,15 +29,16 @@
     db))
 
 
+;; TODO: temporary implementation for visual testing
 (rf/reg-event-db
  :action-drop
  (fn [db _]
    (when-redrawn db
      (fn [db]
        (let [field (:field db)
-             tetromino (rand-nth tetrominos)]
-         (if (can-act? field #(place-tetramino %1 tetromino))
-           (assoc db :field (place-tetramino field tetromino))
+             tetramino (rand-nth tetraminos)]
+         (if (can-act? field #(place-tetramino %1 tetramino))
+           (assoc db :field (place-tetramino field tetramino))
            db))))))
 
 
@@ -70,7 +72,7 @@
        (let [field (:field db)]
          (if (can-act? field move-down)
            (update db :field move-down)
-           db))))))
+           (update db :field blend-tetramino)))))))
 
 
 (rf/reg-event-db
@@ -99,7 +101,7 @@
  :redrawn
  (fn [db]
    (-> db
-       (update :field save-prev-tetromino)
+       (update :field save-prev-tetramino)
        (assoc :redrawn true))))
 
 
