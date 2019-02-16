@@ -9,13 +9,6 @@
               transformation-rotate90ccw
               transformation-rotate90cw]]))
 
-(defn save-prev-tetramino [field]
-  (assoc field :tetramino-prev (:tetramino field)))
-
-
-(defn reset-prev-tetramino [field]
-  (assoc field :tetramino-prev nil))
-
 
 (defn move-left [field]
   (-> field
@@ -72,7 +65,6 @@
   ([field tetramino initial-x initial-y]
    (let [initial-cells (:cells tetramino)]
      (assoc field
-            :tetramino-prev nil
             :tetramino (conj tetramino
                              {:cells (matrix/mmul initial-cells (transformation-move initial-x initial-y))
                               :x initial-x
@@ -82,7 +74,6 @@
 (defn blend-tetramino [field]
   (let [tetramino (:tetramino field)]
     (assoc field
-           :tetramino-prev :tetramino
            :tetramino nil
            :cells (into (:cells field) (:cells tetramino) ))))
 

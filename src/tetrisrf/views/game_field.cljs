@@ -8,7 +8,7 @@
   (let [ctx-x (* cell-width x)
         ctx-y (* cell-height y)]
    (set! (.-fillStyle ctx2d) color)
-    (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)))
+   (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)))
 
 
 (defn draw-tetramino!
@@ -19,10 +19,6 @@
      (draw-cell! ctx2d cellwh cell color))))
 
 
-(defn erase-tetramino! [ctx2d cellwh tetramino]
-  (draw-tetramino! ctx2d cellwh tetramino color-white))
-
-
 (defn draw-cells!
   ([ctx2d cellwh cells]
    (draw-cells! ctx2d cellwh cells color-blue))
@@ -31,22 +27,21 @@
      (draw-cell! ctx2d cellwh cell color))))
 
 
-(defn erase-cells! [ctx2d cellwh cells]
-  (draw-cells! ctx2d cellwh cells color-white))
-
-
 (defn draw-field! [canvas cell-size field]
   (let [ctx2d (.getContext canvas "2d")
-        tetramino (:tetramino field)
-        tetramino-prev (:tetramino-prev field)]
-    (when tetramino-prev
-      (erase-tetramino! ctx2d
-                        cell-size
-                        tetramino-prev))
+        field-width (:width field)
+        field-height (:height field)
+        [cell-width cell-height] cell-size
+        tetramino (:tetramino field)]
+    ;; Erasing everything
+    (set! (.-fillStyle ctx2d) color-white)
+    (.fillRect ctx2d 0 0 (* field-width cell-width) (* field-height cell-height))
+    ;; Drawing tetramino if present
     (when tetramino
       (draw-tetramino! ctx2d
                        cell-size
                        tetramino))
+    ;; Drawing field cells
     (draw-cells! ctx2d cell-size (:cells field))))
 
 
@@ -75,5 +70,4 @@
                                     canvas (.-firstChild node)]
                                 (.requestAnimationFrame js/window
                                                         (fn []
-                                                          (draw-field! canvas (:cell-size @field) @field)
-                                                          (rf/dispatch [:redrawn])))))})))
+                                                          (draw-field! canvas (:cell-size @field) @field)))))})))
