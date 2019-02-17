@@ -11,4 +11,5 @@
 
 (def initial-db {:field empty-field
                  :runing false
+                 :score 0
                  :timer (create-timer default-timer-interval (fn [] (rf/dispatch [:tick])))})

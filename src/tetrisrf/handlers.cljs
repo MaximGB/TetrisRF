@@ -4,6 +4,7 @@
              :refer
              [blend-tetramino
               can-act?
+              field-remove-complete-lines
               has-tetramino?
               move-down
               move-left
@@ -101,7 +102,16 @@
  (fn [cofx]
    (let [db (:db cofx)
          field (:field db)]
-     (if (and (has-tetramino? field) (can-act? field move-down))
-       {:db (update db :field move-down)}
-       {:db (update db :field blend-tetramino)
-        :dispatch [:action-new]}))))
+     (if (has-tetramino? field)
+       (if (can-act? field move-down)
+         {:db (update db :field move-down)}
+         {:db (update db :field #(-> %
+                                     blend-tetramino
+                                     field-remove-complete-lines))
+          :dispatch [:action-new]})
+       {:dispatch [:action-new]}))))
+
+
+(def a {:a 10})
+
+(update a :a #(-> (+ 20) (- 5)))
