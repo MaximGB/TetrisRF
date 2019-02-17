@@ -3,7 +3,9 @@
             [tetrisrf.actions
              :refer
              [blend-tetramino
+              calc-score
               can-act?
+              field-complete-lines-count
               field-remove-complete-lines
               has-tetramino?
               move-down
@@ -105,13 +107,12 @@
      (if (has-tetramino? field)
        (if (can-act? field move-down)
          {:db (update db :field move-down)}
-         {:db (update db :field #(-> %
-                                     blend-tetramino
-                                     field-remove-complete-lines))
-          :dispatch [:action-new]})
+         (let [field-blended (blend-tetramino field)
+               complete-lines-count (field-complete-lines-count field-blended)
+               field-cleared (field-remove-complete-lines field-blended)
+               score (calc-score (:score db) complete-lines-count)]
+           {:db (assoc db
+                       :field field-cleared
+                       :score score)
+            :dispatch [:action-new]}))
        {:dispatch [:action-new]}))))
-
-
-(def a {:a 10})
-
-(update a :a #(-> (+ 20) (- 5)))

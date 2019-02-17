@@ -1,5 +1,6 @@
 (ns tetrisrf.actions
   (:require [clojure.core.matrix :as matrix]
+            [tetrisrf.consts :refer [score-per-line]]
             [tetrisrf.transformations
              :refer
              [transformation-move
@@ -8,7 +9,6 @@
               transformation-move-right
               transformation-rotate90ccw
               transformation-rotate90cw]]))
-
 
 (defn move-left [field]
   (-> field
@@ -112,15 +112,6 @@
            []
            cells)))
 
-(comment
-
-
-  (cells-v-shift [[0 0]
-                  [0 2] [1 2]]
-                 1)
-
-)
-
 
 (defn cells-first-complete-line-index
   ([cells field-width field-height]
@@ -223,3 +214,7 @@
 
 (defn can-act? [field action]
   (validate-field (action field)))
+
+
+(defn calc-score [current-score lines-completed]
+  (+ current-score (get lines-completed score-per-line)))

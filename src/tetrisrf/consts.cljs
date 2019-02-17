@@ -19,4 +19,10 @@
                 #{"Enter"}          :action-run-stop
                 #{"Escape"}         :action-exit})
 
+(def score-per-line {0 0
+                     1 10
+                     2 50
+                     3 250
+                     4 1250})
+
 ;; TODO: gestures
