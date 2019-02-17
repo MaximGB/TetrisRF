@@ -217,4 +217,4 @@
 
 
 (defn calc-score [current-score lines-completed]
-  (+ current-score (get lines-completed score-per-line)))
+  (+ current-score (get score-per-line lines-completed)))

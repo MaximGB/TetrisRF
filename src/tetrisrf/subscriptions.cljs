@@ -5,3 +5,9 @@
  :field
  (fn [db]
    (:field db)))
+
+
+(rf/reg-sub
+ :score
+ (fn [db]
+   (:score db)))

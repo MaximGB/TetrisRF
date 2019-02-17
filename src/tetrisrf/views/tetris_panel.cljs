@@ -1,9 +1,9 @@
 (ns tetrisrf.views.tetris-panel
-  (:require [tetrisrf.views.game-field :refer [game-field]]
+  (:require [re-frame.core :as rf]
+            [reagent.core :as reagent]
             [tetrisrf.consts :refer [game-keys]]
-            [re-frame.core :as rf]
-            [reagent.core :as reagent]))
-
+            [tetrisrf.views.game-field :refer [game-field]]
+            [tetrisrf.views.score-panel :refer [score-panel]]))
 
 (defn build-key [e]
   (let [key-template {:key #(.-key %1)
@@ -44,7 +44,8 @@
                          :tab-index -1
                          :on-key-down (fn [e]
                                         (dispatch-key-action e game-keys))}
-                        [game-field]])
+                        [game-field]
+                        [score-panel]])
       :component-did-mount (fn [cmp]
                             (let [node (reagent/dom-node cmp)]
                               (.focus node)))}))
