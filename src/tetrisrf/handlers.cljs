@@ -17,6 +17,7 @@
             [tetrisrf.db :refer [initial-db]]
             [tetrisrf.tetraminos :refer [tetraminos]]))
 
+
 (rf/reg-event-db
  :initialize-db
  (fn [db]
@@ -33,7 +34,8 @@
        {:db (assoc db :field (place-tetramino field tetramino))}
        (do (print "Game over!")
            {:stop-timer (:timer db)
-            :db (assoc db :running? false)})))))
+            :db (assoc db
+                       :running? false)})))))
 
 
 (rf/reg-event-db
@@ -95,6 +97,7 @@
        {:start-timer timer
         :db (assoc db
                    :running? true
+                   :score 0
                    :field (assoc (:field db) :cells []))
         :dispatch [:action-new]}))))
 
