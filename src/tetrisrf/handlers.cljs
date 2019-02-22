@@ -3,6 +3,8 @@
             [tetrisrf.actions
              :refer
              [blend-tetramino
+              calc-next-level-score
+              calc-next-level-timer-interval
               calc-score
               can-act?
               field-complete-lines-count
@@ -16,7 +18,6 @@
               rotate-90cw]]
             [tetrisrf.db :refer [initial-db]]
             [tetrisrf.tetraminos :refer [tetraminos]]))
-
 
 (rf/reg-event-db
  :initialize-db
@@ -111,9 +112,20 @@
          (let [field-blended (blend-tetramino field)
                complete-lines-count (field-complete-lines-count field-blended)
                field-cleared (field-remove-complete-lines field-blended)
-               score (calc-score (:score db) complete-lines-count)]
+               score (calc-score (:score db) complete-lines-count)
+               next-level-score (:next-level-score db)
+               level-up (>= score next-level-score)
+               new-next-level-score (if level-up (calc-next-level-score score))
+               level (:level db)
+               timer-interval (:timer-interval db)
+               new-timer-interval (if level-up (calc-next-level-timer-interval timer-interval))
+               timer (:timer db)]
            {:db (assoc db
                        :field field-cleared
-                       :score score)
+                       :score score
+                       :level (if level-up (inc level) level)
+                       :next-level-score (if level-up new-next-level-score next-level-score)
+                       :timer-interval (if level-up new-timer-interval timer-interval))
+            :set-timer [timer (if level-up new-timer-interval timer-interval)]
             :dispatch [:action-new]}))
        {:dispatch [:action-new]}))))

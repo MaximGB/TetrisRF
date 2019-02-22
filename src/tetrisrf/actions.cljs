@@ -1,6 +1,8 @@
 (ns tetrisrf.actions
   (:require [clojure.core.matrix :as matrix]
-            [tetrisrf.consts :refer [score-per-line]]
+            [tetrisrf.consts
+             :refer
+             [level-up-score-coef level-up-timer-coef score-per-line]]
             [tetrisrf.transformations
              :refer
              [transformation-move
@@ -218,3 +220,10 @@
 
 (defn calc-score [current-score lines-completed]
   (+ current-score (get score-per-line lines-completed)))
+
+
+(defn calc-next-level-score [current-score]
+  (* current-score level-up-score-coef))
+
+(defn calc-next-level-timer-interval [current-interval]
+  (* current-interval level-up-timer-coef))

@@ -12,5 +12,8 @@
 (defn stop-timer [t]
   (.stop t))
 
+(defn set-timer-interval [t i]
+  (.setInterval t i))
+
 (defn dispose-timer [t]
   (.dispose t))
