@@ -33,10 +33,10 @@
          tetramino (rand-nth tetraminos)]
      (if (can-act? field #(place-tetramino %1 tetramino))
        {:db (assoc db :field (place-tetramino field tetramino))}
-       (do (print "Game over!")
-           {:stop-timer (:timer db)
-            :db (assoc db
-                       :running? false)})))))
+       {:stop-timer (:timer db)
+        :db (assoc db
+                   :running false)
+        :dispatch [:game-over]}))))
 
 
 (rf/reg-event-db
@@ -94,10 +94,8 @@
        {:stop-timer timer
         :db (assoc db :running? false)}
        {:start-timer timer
-        :db (assoc db
-                   :running? true
-                   :score 0
-                   :field (assoc (:field db) :cells []))
+        :set-timer [timer (:timer-interval initial-db)]
+        :db initial-db
         :dispatch [:action-new]}))))
 
 

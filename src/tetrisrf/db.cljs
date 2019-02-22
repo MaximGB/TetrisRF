@@ -10,7 +10,7 @@
                   :cells []})
 
 (def initial-db {:field empty-field
-                 :runing false
+                 :running false
                  :level 0
                  :score 0
                  :next-level-score first-level-score

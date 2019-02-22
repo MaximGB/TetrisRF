@@ -2,7 +2,7 @@
 
 (def default-timer-interval 500)
 
-(def first-level-score 100)
+(def first-level-score 10)
 
 (def level-up-timer-coef 0.9)
 
