@@ -54,20 +54,15 @@
                         (let [[cell-w cell-h] (:cell-size @field)
                               canvas-width  (* (:width @field) cell-w)
                               canvas-height (* (:height @field) cell-h)]
-                          [:div
-                           {:style {:width "20ex"
-                                    :height "40ex"
-                                    :display :inline-block
-                                    :border "0.3ex solid green"}}
-                           [:canvas
-                            {:style {:width "100%"
-                                     :height "100%"}
-                             :width canvas-width
-                             :height canvas-height}]]))
+                          [:canvas
+                           {:style {:width "100%"
+                                    :height "100%"
+                                    :border "1px solid black"}
+                            :width canvas-width
+                            :height canvas-height}]))
 
       :component-did-update (fn [cmp]
-                              (let [node (reagent/dom-node cmp)
-                                    canvas (.-firstChild node)]
+                              (let [canvas (reagent/dom-node cmp)]
                                 (.requestAnimationFrame js/window
                                                         (fn []
                                                           (draw-field! canvas (:cell-size @field) @field)))))})))

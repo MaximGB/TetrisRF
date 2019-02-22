@@ -1,0 +1,23 @@
+{
+    "autoInstall" : true,
+    "base": "",
+    "paths": {
+        "source": {
+            "config": "semantic/src/theme.config",
+            "definitions": "semantic/src/definitions/",
+            "site": "semantic/src/site/",
+            "themes": "semantic/src/themes/"
+        },
+        "output": {
+            "packaged": "resources/public/semantic/",
+            "uncompressed": "resources/public/semantic/components/",
+            "compressed": "resources/public/semantic/components/",
+            "themes": "resources/public/semantic/themes/"
+        },
+        "clean": "resources/public/semantic/"
+    },
+    "permission": false,
+    "autoInstall": false,
+    "rtl": false,
+    "version": "2.4.2"
+}

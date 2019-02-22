@@ -3,5 +3,8 @@
 
 (defn score-panel []
   (let [score (rf/subscribe [:score])]
-    [:div "Score"
-     [:div {:style {:border "1px solid black"}} @score]]))
+    [:div.ui.labeled.big.input
+     [:div.ui.label "Score"]
+     [:input {:readonly :readonly
+              :tab-index -1
+              :value @score}]]))

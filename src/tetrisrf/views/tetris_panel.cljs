@@ -3,7 +3,8 @@
             [reagent.core :as reagent]
             [tetrisrf.consts :refer [game-keys]]
             [tetrisrf.views.game-field :refer [game-field]]
-            [tetrisrf.views.score-panel :refer [score-panel]]))
+            [tetrisrf.views.score-panel :refer [score-panel]]
+            [tetrisrf.views.level-panel :refer [level-panel]]))
 
 (defn build-key [e]
   (let [key-template {:key #(.-key %1)
@@ -32,20 +33,23 @@
     (reagent/create-class
      {:display-name "Tetris"
       :reagent-render (fn []
-                       [:div
-                        {:style {:width "100%"
-                                 :height "100%"
-                                 :display :flex
-                                 :flex-wrap :nowrap
-                                 :box-sizing :border-box
-                                 :justify-content :center
-                                 :align-items :center
-                                 :border "0.1em solid orange"}
-                         :tab-index -1
-                         :on-key-down (fn [e]
-                                        (dispatch-key-action e game-keys))}
-                        [game-field]
-                        [score-panel]])
+                        [:div.ui.three.column.grid.container
+                         {:style {:outline :none}
+                          :tab-index -1
+                          :on-key-down (fn [e]
+                                         (.preventDefault e)
+                                         (dispatch-key-action e game-keys))}
+                         [:div.column.sixteen.wide
+                          [:h1.ui.header.center.aligned "Tetris"]]
+                         [:div.row
+                          [:div.column.six.wide]
+                          [:div.column.four.wide
+                           {:style {:display :flex
+                                    :justify-content :center}}
+                            [game-field]]
+                          [:div.column.six.wide
+                           [score-panel]
+                           [level-panel]]]])
       :component-did-mount (fn [cmp]
                             (let [node (reagent/dom-node cmp)]
                               (.focus node)))}))

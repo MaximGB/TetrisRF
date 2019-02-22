@@ -56,15 +56,13 @@
        db))))
 
 
-(rf/reg-event-db
+(rf/reg-event-fx
  :action-down
- (fn [db]
-   (let [field (:field db)]
+ (fn [cofx]
+   (let [db (:db cofx)
+         field (:field db)]
      (if (has-tetramino? field)
-       (if (can-act? field move-down)
-         (update db :field move-down)
-         (update db :field blend-tetramino))
-       db))))
+       {:dispatch [:tick]}))))
 
 
 (rf/reg-event-db

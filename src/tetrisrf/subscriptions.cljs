@@ -11,3 +11,8 @@
  :score
  (fn [db]
    (:score db)))
+
+(rf/reg-sub
+ :level
+ (fn [db]
+   (:level db)))

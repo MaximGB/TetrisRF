@@ -1,0 +1,7 @@
+#app div.input {
+    margin-bottom: 1em;
+}
+
+#app div.input div.label {
+    min-width: 5em;
+}

@@ -6,6 +6,9 @@ pom.xml.asc
 /classes/
 /target/
 /checkouts/
+/semantic/
+/resources/public/semantic
+/node_modules/
 .lein-deps-sum
 .lein-repl-history
 .lein-plugins/

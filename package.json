@@ -1,0 +1,27 @@
+{
+  "name": "TetrisRF",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaximGB/TetrisRF.git"
+  },
+  "keywords": [
+    "re-frame",
+    "tetris",
+    "clojurescript"
+  ],
+  "author": "Maxim Bazhenov",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/MaximGB/TetrisRF/issues"
+  },
+  "homepage": "https://github.com/MaximGB/TetrisRF#readme",
+  "devDependencies": {
+    "semantic-ui": "^2.4.2"
+  }
+}

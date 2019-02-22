@@ -2,6 +2,12 @@
 
 (def default-timer-interval 500)
 
+(def first-level-score 100)
+
+(def level-up-timer-coef 0.9)
+
+(def level-up-score-coef 1.1)
+
 (def color-white "rgb(255, 255, 255)")
 
 (def color-red "rgb(255, 0, 0)")
