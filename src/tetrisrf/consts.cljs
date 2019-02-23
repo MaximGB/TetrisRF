@@ -22,7 +22,7 @@
                 #{"ArrowUp" :shift} :action-rotate-ccw
                 #{"ArrowDown"}      :action-down
                 #{" "}              :action-drop
-                #{"Enter"}          :action-run-stop
+                #{"Enter"}          :action-run-pause
                 #{"Escape"}         :action-exit})
 
 ;; TODO: gestures

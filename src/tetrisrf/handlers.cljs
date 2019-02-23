@@ -85,17 +85,17 @@
 
 
 (rf/reg-event-fx
- :action-run-stop
+ :action-run-pause
  (fn [cofx]
    (let [db (:db cofx)
-         running? (:running? db)
+         running? (:running db)
          timer (:timer db)]
      (if running?
        {:stop-timer timer
-        :db (assoc db :running? false)}
+        :db (assoc db :running false)}
        {:start-timer timer
         :set-timer [timer (:timer-interval initial-db)]
-        :db initial-db
+        :db (assoc initial-db :running true)
         :dispatch [:action-new]}))))
 
 
