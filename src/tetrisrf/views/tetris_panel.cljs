@@ -3,8 +3,9 @@
             [reagent.core :as reagent]
             [tetrisrf.consts :refer [game-keys]]
             [tetrisrf.views.game-field :refer [game-field]]
-            [tetrisrf.views.score-panel :refer [score-panel]]
-            [tetrisrf.views.level-panel :refer [level-panel]]))
+            [tetrisrf.views.level-panel :refer [level-panel]]
+            [tetrisrf.views.next-panel :refer [next-panel]]
+            [tetrisrf.views.score-panel :refer [score-panel]]))
 
 (defn build-key [e]
   (let [key-template {:key #(.-key %1)
@@ -46,10 +47,11 @@
                           [:div.column.four.wide
                            {:style {:display :flex
                                     :justify-content :center}}
-                            [game-field]]
+                           [game-field (rf/subscribe [:field])]]
                           [:div.column.six.wide
                            [score-panel]
-                           [level-panel]]]])
+                           [level-panel]
+                           [next-panel]]]])
       :component-did-mount (fn [cmp]
                             (let [node (reagent/dom-node cmp)]
                               (.focus node)))}))

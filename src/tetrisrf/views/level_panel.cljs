@@ -5,6 +5,6 @@
   (let [level (rf/subscribe [:level])]
     [:div.ui.labeled.big.input
      [:div.ui.label "Level"]
-     [:input {:readonly :readonly
+     [:input {:readOnly :readOnly
               :tab-index -1
               :value @level}]]))

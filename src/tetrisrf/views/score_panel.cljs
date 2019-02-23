@@ -5,6 +5,6 @@
   (let [score (rf/subscribe [:score])]
     [:div.ui.labeled.big.input
      [:div.ui.label "Score"]
-     [:input {:readonly :readonly
+     [:input {:readOnly :readOnly
               :tab-index -1
               :value @score}]]))

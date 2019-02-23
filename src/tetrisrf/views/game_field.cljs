@@ -45,24 +45,25 @@
     (draw-cells! ctx2d cell-size (:cells field))))
 
 
-(defn game-field []
-  (let [field (rf/subscribe [:field])]
-    (reagent/create-class
-     {:display-name "Game field"
+(defn game-field [field-subscription]
+  (reagent/create-class
+   {:display-name "Game field"
 
-      :reagent-render (fn []
-                        (let [[cell-w cell-h] (:cell-size @field)
-                              canvas-width  (* (:width @field) cell-w)
-                              canvas-height (* (:height @field) cell-h)]
-                          [:canvas
-                           {:style {:width "100%"
-                                    :height "100%"
-                                    :border "1px solid black"}
-                            :width canvas-width
-                            :height canvas-height}]))
+    :reagent-render (fn []
+                      (let [field @field-subscription
+                            [cell-w cell-h] (:cell-size field)
+                            canvas-width  (* (:width field) cell-w)
+                            canvas-height (* (:height field) cell-h)]
+                        [:canvas
+                         {:style {:width "100%"
+                                  :height "100%"
+                                  :border "1px solid black"}
+                          :width canvas-width
+                          :height canvas-height}]))
 
-      :component-did-update (fn [cmp]
-                              (let [canvas (reagent/dom-node cmp)]
-                                (.requestAnimationFrame js/window
-                                                        (fn []
-                                                          (draw-field! canvas (:cell-size @field) @field)))))})))
+    :component-did-update (fn [cmp]
+                            (let [canvas (reagent/dom-node cmp)
+                                  field @field-subscription]
+                              (.requestAnimationFrame js/window
+                                                      (fn []
+                                                        (draw-field! canvas (:cell-size field) field)))))}))

@@ -8,6 +8,10 @@
 
 (def level-up-score-coef 1.1)
 
+(def field-cell-width 20)
+
+(def field-cell-height 20)
+
 (def color-white "rgb(255, 255, 255)")
 
 (def color-red "rgb(255, 0, 0)")
