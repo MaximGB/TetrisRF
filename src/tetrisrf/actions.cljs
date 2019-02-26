@@ -58,19 +58,29 @@
 
 
 (defn place-tetramino
-  ([field tetramino]
-   (let [field-width (:width field)
-         tetramino-width (:width tetramino)
-         initial-x (quot (- field-width tetramino-width) 2)
-         initial-y 0]
-     (place-tetramino field tetramino initial-x initial-y)))
-  ([field tetramino initial-x initial-y]
-   (let [initial-cells (:cells tetramino)]
-     (assoc field
-            :tetramino (conj tetramino
-                             {:cells (matrix/mmul initial-cells (transformation-move initial-x initial-y))
-                              :x initial-x
-                              :y initial-y})))))
+  [field tetramino initial-x initial-y]
+  (let [initial-cells (:cells tetramino)]
+    (assoc field
+           :tetramino (assoc tetramino
+                             :cells (matrix/mmul initial-cells (transformation-move initial-x initial-y))
+                             :x initial-x
+                             :y initial-y))))
+
+
+(defn place-tetramino-centered [field tetramino & {:keys [center-h center-v]
+                                                   :or {center-h true
+                                                        center-v false}}]
+  (let [field-width (:width field)
+        field-height (:height field)
+        tetramino-width (:width tetramino)
+        tetramino-height (:height tetramino)
+        initial-x (if center-h
+                    (quot (- field-width tetramino-width) 2)
+                    0)
+        initial-y (if center-v
+                    (quot (- field-height tetramino-height) 2)
+                    0)]
+    (place-tetramino field tetramino initial-x initial-y)))
 
 
 (defn blend-tetramino [field]
@@ -81,13 +91,13 @@
 
 
 (defn cells-line-complete? [cells field-width line-y]
-    (= field-width
-       (reduce (fn [cnt [cx cy]]
-                 (if (= line-y cy)
-                   (inc cnt)
-                   cnt))
-               0
-               cells)))
+  (= field-width
+     (reduce (fn [cnt [cx cy]]
+               (if (= line-y cy)
+                 (inc cnt)
+                 cnt))
+             0
+             cells)))
 
 
 (defn cells-complete-line-count [cells field-width field-height]

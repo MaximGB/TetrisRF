@@ -13,7 +13,7 @@
               move-down
               move-left
               move-right
-              place-tetramino
+              place-tetramino-centered
               rotate-90ccw
               rotate-90cw]]
             [tetrisrf.db :refer [initial-db make-next-tetramino-field]]
@@ -30,12 +30,14 @@
  (fn [cofx]
    (let [db (:db cofx)
          field (:field db)
+         next-tetramino (:next-tetramino db)
          next-tetramino-field (:next-tetramino-field db)
-         tetramino (:tetramino next-tetramino-field)]
-     (if (can-act? field #(place-tetramino %1 tetramino))
+         next-next-tetramino (rand-nth tetraminos)]
+     (if (can-act? field #(place-tetramino-centered %1 next-tetramino))
        {:db (assoc db
-                   :field (place-tetramino field tetramino)
-                   :next-tetramino-field (assoc next-tetramino-field :tetramino (rand-nth tetraminos)))}
+                   :field (place-tetramino-centered field next-tetramino)
+                   :next-tetramino next-next-tetramino
+                   :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true))}
        {:stop-timer (:timer db)
         :db (assoc db
                    :running false)
@@ -98,9 +100,11 @@
         :db (assoc db :running false)}
        {:start-timer timer
         :set-timer [timer (:timer-interval initial-db)]
-        :db (assoc initial-db
-                   :running true
-                   :next-tetramino-field (make-next-tetramino-field (rand-nth tetraminos)))
+        :db (let [next-tetramino (rand-nth tetraminos)]
+              (assoc initial-db
+                    :running true
+                    :next-tetramino next-tetramino
+                    :next-tetramino-field (place-tetramino-centered (make-next-tetramino-field) next-tetramino :center-v true)))
         :dispatch [:action-new]}))))
 
 

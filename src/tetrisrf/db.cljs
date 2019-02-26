@@ -25,7 +25,7 @@
   ([]
    (make-next-tetramino-field nil))
   ([tetramino]
-   (let [field (make-empty-field 4 4)]
+   (let [field (make-empty-field 6 6)]
      (if tetramino
        (assoc field :tetramino tetramino)
        field))))
@@ -33,6 +33,7 @@
 
 (def initial-db {:field (make-empty-field)
                  :next-tetramino-field (make-next-tetramino-field)
+                 :next-tetramino nil
                  :running false
                  :level 0
                  :score 0

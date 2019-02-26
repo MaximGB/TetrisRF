@@ -7,8 +7,14 @@
 (defn draw-cell! [ctx2d [cell-width cell-height] [x y] color]
   (let [ctx-x (* cell-width x)
         ctx-y (* cell-height y)]
-   (set! (.-fillStyle ctx2d) color)
-   (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)))
+    (set! (.-fillStyle ctx2d) color)
+    (set! (.-strokeStyle ctx2d) "rgb(0, 0, 0)")
+    (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)
+    (.beginPath ctx2d)
+    (.moveTo ctx2d (+ ctx-x cell-width) ctx-y)
+    (.lineTo ctx2d (+ ctx-x cell-width) (+ ctx-y cell-height))
+    (.lineTo ctx2d ctx-x (+ ctx-y cell-height))
+    (.stroke ctx2d)))
 
 
 (defn draw-tetramino!

@@ -12,13 +12,13 @@
 
 (def field-cell-height 20)
 
-(def color-white "rgb(255, 255, 255)")
+(def color-white "#FFFFFF")
 
-(def color-red "rgb(255, 0, 0)")
+(def color-red "#FF0000")
 
-(def color-green "rgb(0, 255, 0)")
+(def color-green "#00FF00")
 
-(def color-blue "rgb(0, 0, 255)")
+(def color-blue "#0000FF")
 
 (def game-keys {#{"ArrowLeft"}      :action-left
                 #{"ArrowRight"}     :action-right
