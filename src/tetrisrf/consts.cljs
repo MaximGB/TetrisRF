@@ -2,7 +2,7 @@
 
 (def default-timer-interval 500)
 
-(def first-level-score 10)
+(def first-level-score 100)
 
 (def level-up-timer-coef 0.9)
 
@@ -14,11 +14,11 @@
 
 (def color-white "#FFFFFF")
 
-(def color-red "#FF0000")
+(def color-red "#cb1212")
 
 (def color-green "#00FF00")
 
-(def color-blue "#0000FF")
+(def color-blue "#524b96")
 
 (def game-keys {#{"ArrowLeft"}      :action-left
                 #{"ArrowRight"}     :action-right

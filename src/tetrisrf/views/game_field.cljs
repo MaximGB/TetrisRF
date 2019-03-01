@@ -1,18 +1,24 @@
 (ns tetrisrf.views.game-field
-  (:require [tetrisrf.consts :refer [color-blue color-red color-white]]
-            [re-frame.core :as rf]
-            [reagent.core :as reagent]))
-
+  (:require [reagent.core :as reagent]
+            [tetrisrf.color :refer [rgb-darker rgb-lighter]]
+            [tetrisrf.consts :refer [color-blue color-red color-white]]))
 
 (defn draw-cell! [ctx2d [cell-width cell-height] [x y] color]
   (let [ctx-x (* cell-width x)
-        ctx-y (* cell-height y)]
+        ctx-y (* cell-height y)
+        lighter-c (rgb-lighter color 0.3)
+        darker-c (rgb-darker color 1)]
     (set! (.-fillStyle ctx2d) color)
-    (set! (.-strokeStyle ctx2d) "rgb(0, 0, 0)")
     (.fillRect ctx2d ctx-x ctx-y cell-width cell-height)
+    (set! (.-strokeStyle ctx2d) darker-c)
     (.beginPath ctx2d)
+    (.moveTo ctx2d (+ ctx-x (dec cell-width)) ctx-y)
+    (.lineTo ctx2d (+ ctx-x (dec cell-width)) (+ ctx-y (dec cell-height)))
+    (.lineTo ctx2d ctx-x (+ ctx-y (dec cell-height)))
+    (.stroke ctx2d)
+    (set! (.-strokeStyle ctx2d) lighter-c)
     (.moveTo ctx2d (+ ctx-x cell-width) ctx-y)
-    (.lineTo ctx2d (+ ctx-x cell-width) (+ ctx-y cell-height))
+    (.lineTo ctx2d ctx-x ctx-y)
     (.lineTo ctx2d ctx-x (+ ctx-y cell-height))
     (.stroke ctx2d)))
 
