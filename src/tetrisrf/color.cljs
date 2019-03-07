@@ -66,17 +66,13 @@
 
 (defn rgb-lighter [color offset]
   (-> color
-      rgbs->rgbv
       rgbv->hsvv
       (hsv-lighter offset)
-      hsvv->rgbv
-      rgbv->rgbs))
+      hsvv->rgbv))
 
 
 (defn rgb-darker [color offset]
   (-> color
-      rgbs->rgbv
       rgbv->hsvv
       (hsv-darker offset)
-      hsvv->rgbv
-      rgbv->rgbs))
+      hsvv->rgbv))
