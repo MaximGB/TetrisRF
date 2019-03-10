@@ -13,13 +13,13 @@
         darker-c (rgb-darker color 0.3)]
     (q/no-stroke)
     (apply q/fill color)
-    (q/rect (inc ctx-x) (inc ctx-y) (dec cell-width) (dec cell-height))
+    (q/rect (inc ctx-x) (inc ctx-y) (- cell-width 2) (- cell-height 2))
     (apply q/stroke darker-c)
-    (q/line (+ ctx-x cell-width) ctx-y (+ ctx-x cell-width) (+ ctx-y cell-height))
-    (q/line ctx-x (+ ctx-y cell-height) (+ ctx-x cell-width) (+ ctx-y cell-height))
+    (q/line (+ ctx-x (dec cell-width)) ctx-y (+ ctx-x (dec cell-width)) (+ ctx-y (dec cell-height)))
+    (q/line ctx-x (+ ctx-y (dec cell-height)) (+ ctx-x (dec cell-width)) (+ ctx-y (dec cell-height)))
     (apply q/stroke lighter-c)
-    (q/line ctx-x ctx-y (+ ctx-x cell-width) ctx-y)
-    (q/line ctx-x ctx-y ctx-x (+ ctx-y cell-height))))
+    (q/line ctx-x ctx-y (+ ctx-x (dec cell-width)) ctx-y)
+    (q/line ctx-x ctx-y ctx-x (+ ctx-y (dec cell-height)))))
 
 
 (defn draw-tetramino!
