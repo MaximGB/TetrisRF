@@ -4,15 +4,17 @@
              :refer
              [blend-tetramino
               calc-score
+              field-complete-lines-count
+              field-remove-complete-lines
               move-down
               move-left
               move-right
               place-tetramino
               place-tetramino-centered
               rotate-90ccw
-              rotate-90cw]]
-            [tetrisrf.db :refer [make-empty-field]]
-            [tetrisrf.actions :refer [validate-field]]))
+              rotate-90cw
+              validate-field]]
+            [tetrisrf.db :refer [make-empty-field]]))
 
 (deftest calc-score-by-lines-test
   (is (< (calc-score 0 1)
@@ -206,3 +208,82 @@
       (is (= (validate-field field)
              false)
           "Cells hit detected"))))
+
+
+(deftest field-complete-lines-count-test
+  (testing "0 complete lines count case"
+    (let [field (make-empty-field 3 4)]
+      (is (= (field-complete-lines-count field)
+             0)
+          "No complete lines found")))
+  (testing "1 complete line count case"
+    (let [field (-> (make-empty-field 2 4)
+                    (place-tetramino test-tetramino 0 1)
+                    (blend-tetramino))]
+      (is (= (field-complete-lines-count field)
+             1)
+          "1 complete line found")))
+  (testing "> 1 complete lines count case"
+    (let [field (-> (make-empty-field 2 4)
+                    (place-tetramino test-tetramino 0 3)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 0 2)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 0 1)
+                    (blend-tetramino))]
+      (is (= (field-complete-lines-count field)
+             3)
+          "3 complete lines found"))))
+
+
+(deftest field-remove-complete-lines-test
+  (testing "0 complete lines removal"
+    (let [field (-> (make-empty-field 4 4)
+                    (place-tetramino test-tetramino 1 2)
+                    (blend-tetramino))
+          field0 (field-remove-complete-lines field)]
+      (is (= field
+             field0)
+          "Field is untoched by complete lines removal code if no complete lines present")))
+  (testing "1 complete line removal"
+    (let [field (-> (make-empty-field 2 4)
+                    (place-tetramino test-tetramino 0 1)
+                    (blend-tetramino))
+          complete-lines-initial (field-complete-lines-count field)
+          field0 (field-remove-complete-lines field)]
+      (is (= complete-lines-initial
+             1)
+          "1 complete line has been found before removal")
+      (is (= (field-complete-lines-count field0)
+             0)
+          "No complete lines has been found after removal")))
+  (testing "2 complete lines removal"
+    (let [field (-> (make-empty-field 2 4)
+                    (place-tetramino test-tetramino 0 3)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 0 2)
+                    (blend-tetramino))
+          complete-lines-initial (field-complete-lines-count field)
+          field0 (field-remove-complete-lines field)]
+      (is (= complete-lines-initial
+             2)
+          "2 complete lines has been found before removal")
+      (is (= (field-complete-lines-count field0)
+             0)
+          "No complete lines has been found after removal")))
+  (testing "> 2 complete lines removal"
+    (let [field (-> (make-empty-field 2 4)
+                    (place-tetramino test-tetramino 0 3)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 0 2)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 0 0)
+                    (blend-tetramino))
+          complete-lines-initial (field-complete-lines-count field)
+          field0 (field-remove-complete-lines field)]
+      (is (= complete-lines-initial
+             3)
+          "3 complete lines has been found before removal")
+      (is (= (field-complete-lines-count field0)
+             0)
+          "No complete lines has been found after removal"))))
