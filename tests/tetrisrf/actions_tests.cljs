@@ -2,7 +2,8 @@
   (:require [cljs.test :refer [deftest is testing] :include-macros true]
             [tetrisrf.actions
              :refer
-             [calc-score
+             [blend-tetramino
+              calc-score
               move-down
               move-left
               move-right
@@ -10,7 +11,8 @@
               place-tetramino-centered
               rotate-90ccw
               rotate-90cw]]
-            [tetrisrf.db :refer [make-empty-field]]))
+            [tetrisrf.db :refer [make-empty-field]]
+            [tetrisrf.actions :refer [validate-field]]))
 
 (deftest calc-score-by-lines-test
   (is (< (calc-score 0 1)
@@ -163,3 +165,44 @@
     (is (= initial-tetramino
            rotated-tetramino)
         "Full rotation doesn't change tetramino")))
+
+
+(deftest blend-tetramino-test
+  (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 3)
+        field-blended (blend-tetramino field)
+        tetramino-cells (get-in field [:tetramino :cells])
+        field-cells (:cells field-blended)]
+    (is (= tetramino-cells
+           field-cells)
+        "After blend tetramino cells should became field cells")))
+
+
+(deftest validate-field-test
+  (testing "Normal case"
+    (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 1)]
+      (is (= (validate-field field)
+             true)
+          "Valid case detected")))
+  (testing "Right overflow"
+    (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 3 1)]
+      (is (= (validate-field field)
+             false)
+          "Right overflow detected")))
+  (testing "Left overflow"
+    (let [field (place-tetramino (make-empty-field 3 4) test-tetramino -1 1)]
+      (is (= (validate-field field)
+             false)
+          "Left overflow detected")))
+  (testing "Bottom overflow"
+    (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 4 1)]
+      (is (= (validate-field field)
+             false)
+          "Bottom overflow detected")))
+  (testing "Cells hit"
+    (let [field (-> (make-empty-field 3 4)
+                    (place-tetramino test-tetramino 1 1)
+                    (blend-tetramino)
+                    (place-tetramino test-tetramino 2 1))]
+      (is (= (validate-field field)
+             false)
+          "Cells hit detected"))))
