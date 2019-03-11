@@ -1,5 +1,5 @@
 (ns tetrisrf.actions-tests
-  (:require [cljs.test :refer [deftest is] :include-macros true]
+  (:require [cljs.test :refer [deftest is testing] :include-macros true]
             [tetrisrf.actions
              :refer
              [calc-score
@@ -7,6 +7,7 @@
               move-left
               move-right
               place-tetramino
+              place-tetramino-centered
               rotate-90ccw
               rotate-90cw]]
             [tetrisrf.db :refer [make-empty-field]]))
@@ -35,6 +36,36 @@
         "Tetramino initial coordiates should be as passed")
     (is (= (:cells tetramino) (:cells test-tetramino))
         "Since tetramino is placed at [0 0] it's cells should be untoched")))
+
+
+(deftest place-tetramino-centered-test
+  (testing "Horizontal centering"
+    (let [field (place-tetramino-centered (make-empty-field 6 4) test-tetramino :center-h true)
+          tetramino (:tetramino field)
+          x (:x tetramino)
+          y (:y tetramino)]
+      (is (= x 2)
+          "Tetramino is horizontaly centered")
+      (is (= y 0)
+          "Tetramino vertical coordinate is untouched (0)")))
+  (testing "Vertical centering"
+    (let [field (place-tetramino-centered (make-empty-field 6 4) test-tetramino :center-h false :center-v true)
+          tetramino (:tetramino field)
+          x (:x tetramino)
+          y (:y tetramino)]
+      (is (= x 0)
+          "Tetramino horizontal coordinate is untoched (0)")
+      (is (= y 1)
+          "Tetramino is vertically centered")))
+  (testing "Full centering"
+    (let [field (place-tetramino-centered (make-empty-field 6 4) test-tetramino :center-h true :center-v true)
+          tetramino (:tetramino field)
+          x (:x tetramino)
+          y (:y tetramino)]
+      (is (= x 2)
+          "Tetramino is horizontaly centered")
+      (is (= y 1)
+          "Tetramino is vertically centered"))))
 
 
 (deftest move-left-test
