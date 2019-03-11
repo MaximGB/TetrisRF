@@ -2,7 +2,13 @@
   (:require [cljs.test :refer [deftest is] :include-macros true]
             [tetrisrf.actions
              :refer
-             [calc-score move-down move-left move-right place-tetramino]]
+             [calc-score
+              move-down
+              move-left
+              move-right
+              place-tetramino
+              rotate-90ccw
+              rotate-90cw]]
             [tetrisrf.db :refer [make-empty-field]]))
 
 (deftest calc-score-by-lines-test
@@ -13,10 +19,11 @@
       "Player gets more score with more amount of lines removed"))
 
 
+;; [*][*]
 (def test-tetramino {:cells  [[0 0 1] [1 0 1]]
                      :pivot  [0.5 0.5 1]
                      :width  2
-                     :height 2})
+                     :height 1})
 
 
 (deftest place-tetramino-test
@@ -73,3 +80,55 @@
     (is (= (:cells tetramino)
            [[1 2 1] [2 2 1]])
         "Tetramino cells' coordinates should be moved down")))
+
+
+(deftest rotate-90cw-test
+  (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 1)
+        field-w-rotation (rotate-90cw field)
+        tetramino (:tetramino field-w-rotation)
+        x (:x tetramino)
+        y (:y tetramino)
+        cells (:cells tetramino)]
+    (is (= x 1)
+        "Rotation doesn't change tetramino coordinates")
+    (is (= y 1)
+        "Rotation doesn't change tetramino coordinates")
+    (is (= cells
+           [[2 1 1][2 2 1]])
+        "Rotation change tetramino cells' coordinates, they are rotated alongisde pivot point")))
+
+
+(deftest rotate-90ccw-test
+  (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 1)
+        field-w-rotation (rotate-90ccw field)
+        tetramino (:tetramino field-w-rotation)
+        x (:x tetramino)
+        y (:y tetramino)
+        cells (:cells tetramino)]
+    (is (= x 1)
+        "Rotation doesn't change tetramino coordinates")
+    (is (= y 1)
+        "Rotation doesn't change tetramino coordinates")
+    (is (= cells
+           [[1 2 1][1 1 1]])
+        "Rotation change tetramino cells' coordinates, they are rotated alongisde pivot point")))
+
+
+(deftest rotate-360cw-test
+  (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 1)
+        field-w-rotation (nth (iterate rotate-90cw field) 4)
+        initial-tetramino (:tetramino field)
+        rotated-tetramino (:tetramino field-w-rotation)]
+    (is (= initial-tetramino
+           rotated-tetramino)
+        "Full rotation doesn't change tetramino")))
+
+
+(deftest rotate-360ccw-test
+  (let [field (place-tetramino (make-empty-field 3 4) test-tetramino 1 1)
+        field-w-rotation (nth (iterate rotate-90ccw field) 4)
+        initial-tetramino (:tetramino field)
+        rotated-tetramino (:tetramino field-w-rotation)]
+    (is (= initial-tetramino
+           rotated-tetramino)
+        "Full rotation doesn't change tetramino")))

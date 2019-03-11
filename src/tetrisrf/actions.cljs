@@ -44,9 +44,9 @@
                   (matrix/mmul (transformation-move offset-x offset-y)))]
     (-> field
         (update :tetramino
-                #(conj %1 {:cells  cells
-                           :width  height
-                           :height width})))))
+                assoc :cells cells
+                      :width height
+                      :height width))))
 
 
 (defn rotate-90cw [field]
