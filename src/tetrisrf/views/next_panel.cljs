@@ -3,8 +3,7 @@
             [tetrisrf.views.game-field :refer [game-field]]))
 
 (defn next-panel []
-  (let [next (rf/subscribe [:next-tetramino])]
-    [:div.ui.labeled.big.input
-     [:div.ui.label "Next"]
-     [:div {:style {:width "5em" :height "5em"}}
-      [game-field (rf/subscribe [:next-tetramino-field])]]]))
+  [:div.ui.labeled.big.input.next-field
+   [:div.ui.label.big "Next"]
+   [:div.field-frame
+    [game-field (rf/subscribe [:next-tetramino-field])]]])

@@ -68,8 +68,7 @@
                             canvas-height (* (:height field) cell-h)]
                         [:canvas
                          {:style {:width "100%"
-                                  :height "100%"
-                                  :border "1px solid black"}
+                                  :height "100%"}
                           :width canvas-width
                           :height canvas-height}]))
 

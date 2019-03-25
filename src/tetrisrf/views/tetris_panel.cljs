@@ -47,7 +47,8 @@
                           [:div.column.four.wide
                            {:style {:display :flex
                                     :justify-content :center}}
-                           [game-field (rf/subscribe [:field])]]
+                           [:div.ui.raised.segment.field-frame
+                            [game-field (rf/subscribe [:field])]]]
                           [:div.column.six.wide
                            [score-panel]
                            [level-panel]
