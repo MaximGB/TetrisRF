@@ -97,14 +97,16 @@
          timer (:timer db)]
      (if running?
        {:stop-timer timer
-        :db (assoc db :running false)}
+        :db (assoc db
+                   :running false)}
        {:start-timer timer
         :set-timer [timer (:timer-interval initial-db)]
         :db (let [next-tetramino (rand-nth tetraminos)]
               (assoc initial-db
-                    :running true
-                    :next-tetramino next-tetramino
-                    :next-tetramino-field (place-tetramino-centered (make-next-tetramino-field) next-tetramino :center-v true)))
+                     :running true
+                     :game-over false
+                     :next-tetramino next-tetramino
+                     :next-tetramino-field (place-tetramino-centered (make-next-tetramino-field) next-tetramino :center-v true)))
         :dispatch [:action-new]}))))
 
 
@@ -136,3 +138,9 @@
             :set-timer [timer (if level-up new-timer-interval timer-interval)]
             :dispatch [:action-new]}))
        {:dispatch [:action-new]}))))
+
+
+(rf/reg-event-db
+ :game-over
+ (fn [db]
+   (assoc db :game-over true)))

@@ -19,3 +19,7 @@
     width: 7em;
     height: 7em;
 }
+
+#app .close.icon {
+    color: black;
+}
