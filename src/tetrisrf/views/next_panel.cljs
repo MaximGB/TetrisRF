@@ -6,4 +6,4 @@
   [:div.ui.labeled.big.input
    [:div.ui.label "Next"]
    [:div {:style {:width "5em" :height "5em"}}
-    [game-field (rf/subscribe [:next-tetramino-field])]]])
+    [game-field (rf/subscribe [:next-tetramino-field]) nil]]])

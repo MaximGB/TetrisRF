@@ -38,7 +38,7 @@
      (draw-cell! cellwh cell color))))
 
 
-(defn draw-field! [field]
+(defn draw-field! [field prev-field]
   (let [field-width (:width field)
         field-height (:height field)
         cell-size (:cell-size field)
@@ -47,38 +47,25 @@
     (when tetramino
       (draw-tetramino! cell-size
                        tetramino))
-    ;; Drawing field cells
     (draw-cells! cell-size (:cells field))))
 
 
-(defn quil-setup-field! [field-subscription]
+(defn quil-setup-field! [field-subscription prev-field-subscription]
   (q/frame-rate 30)
   (q/background 255 255 255)
-  {:field field-subscription})
+  {:field field-subscription
+   :prev-field prev-field-subscription})
 
 
 (defn quil-draw-field! [state]
-  (let [field (:field state)]
+  (let [field-subscription (:field state)
+        prev-field-subscription (:prev-field state)]
     (q/background 255 255 255)
-    (draw-field! @field)
-    state)
-  #_(print @field-subscription)
-  #_(print re-frame.db/app-db)
-  #_((q/no-stroke)
-   (q/background 255 255 236)
-   (q/with-translation [(/ (q/width) 2) (/ (q/height) 2)]
-     (doseq [i (range 1000)]
-       (let [v (+ (mod (q/frame-count) 3) i)
-             ang (* v PHI q/TWO-PI)
-             r   (* (Math/sqrt v) (q/width) (/ 70))
-             x   (* (q/cos ang) r)
-             y   (* (q/sin ang) r)
-             sz  (+ 3 (* i 0.002))]
-         (apply q/fill (nth palette i))
-         (q/ellipse x y sz sz))))))
+    (draw-field! @field-subscription @prev-field-subscription)
+    state))
 
 
-(defn game-field [field-subscription]
+(defn game-field [field-subscription prev-field-subscription]
   (let [canvas-id (str (random-uuid))]
     (reagent/create-class
      {:display-name "Game field"
@@ -104,7 +91,7 @@
                                (q/sketch :host canvas-id
                                          :size [canvas-width canvas-height]
                                          :middleware [qm/fun-mode]
-                                         :setup (fn [] (quil-setup-field! field-subscription))
+                                         :setup (fn [] (quil-setup-field! field-subscription prev-field-subscription))
                                          :draw quil-draw-field!)))
 
       :component-did-update (fn [cmp]

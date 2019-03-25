@@ -47,7 +47,7 @@
                           [:div.column.four.wide
                            {:style {:display :flex
                                     :justify-content :center}}
-                           [game-field (rf/subscribe [:field])]]
+                           [game-field (rf/subscribe [:field]) (rf/subscribe [:prev-field])]]
                           [:div.column.six.wide
                            [score-panel]
                            [level-panel]

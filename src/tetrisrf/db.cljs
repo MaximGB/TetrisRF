@@ -32,6 +32,8 @@
 
 
 (def initial-db {:field (make-empty-field)
+                 :prev-field nil
+                 :next-tick-at nil
                  :next-tetramino-field (make-next-tetramino-field)
                  :next-tetramino nil
                  :running false

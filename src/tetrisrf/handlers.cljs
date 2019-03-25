@@ -126,9 +126,11 @@
                level (:level db)
                timer-interval (:timer-interval db)
                new-timer-interval (if level-up (calc-next-level-timer-interval timer-interval))
+               next-tick-at (js/Date. (+ (.now js/Date) new-timer-interval))
                timer (:timer db)]
            {:db (assoc db
                        :field field-cleared
+                       :prev-field field
                        :score score
                        :level (if level-up (inc level) level)
                        :next-level-score (if level-up new-next-level-score next-level-score)
