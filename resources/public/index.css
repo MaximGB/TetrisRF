@@ -23,3 +23,8 @@
 #app .close.icon {
     color: black;
 }
+
+#app .card-score {
+    font-weight: 700;
+    color: red;
+}

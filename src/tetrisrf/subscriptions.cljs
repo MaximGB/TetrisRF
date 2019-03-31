@@ -10,7 +10,13 @@
 (rf/reg-sub
  :score
  (fn [db]
-   (:score db)))
+   (db :score)))
+
+
+(rf/reg-sub
+ :game-over
+ (fn [db]
+   (db :game-over)))
 
 
 (rf/reg-sub
