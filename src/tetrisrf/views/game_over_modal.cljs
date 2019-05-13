@@ -1,6 +1,5 @@
 (ns tetrisrf.views.game-over-modal
-  (:require [re-frame.core :as rf]
-            [tetrisrf.views.game-field :refer [game-field]]))
+  (:require [re-frame.core :as rf]))
 
 (defn game-over-modal []
   [:div.ui.dimmer.active
@@ -15,6 +14,4 @@
 
 (reagent/create-class
  {:display-name "Game over message"
-  :reagent-render (fn [])
-
-)
+  :reagent-render (fn [])}))

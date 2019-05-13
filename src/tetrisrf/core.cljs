@@ -1,6 +1,9 @@
 (ns ^:figwheel-hooks tetrisrf.core
   (:require [re-frame.core :as rf]
             [reagent.core :as reagent]
+            [tetrisrf.effects]
+            [tetrisrf.subscriptions]
+            [tetrisrf.handlers]
             [tetrisrf.views.messages :refer [messages]]
             [tetrisrf.views.tetris-panel :refer [tetris-panel]]))
 
