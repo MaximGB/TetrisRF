@@ -144,3 +144,11 @@
  :game-over
  (fn [db]
    (assoc db :game-over true)))
+
+
+(rf/reg-event-fx
+ :game-over-accept
+ (fn [cofx]
+   (let [db (cofx :db)]
+     {:db (assoc db :game-over false)
+      :focus "tetris-panel"})))
