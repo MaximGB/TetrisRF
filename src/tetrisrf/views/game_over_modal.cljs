@@ -9,12 +9,5 @@
       [:div.header "Game over :("]
       [:div.description "Your score is " [:span.card-score @(rf/subscribe [:score])] " points!"]]
      [:div.ui.bottom.attached.large.green.button
+      {:on-click (fn [] (print "!")) }
       "Ok"]]])
-
-(comment
-
-(reagent/create-class
- {:display-name "Game over message"
-  :reagent-render (fn [])
-
-)
