@@ -34,7 +34,7 @@
     (reagent/create-class
      {:display-name "Tetris"
       :reagent-render (fn []
-                        [:div.ui.three.column.grid.container
+                        [:div#tetris-panel.ui.three.column.grid.container
                          {:style {:outline :none}
                           :tab-index -1
                           :on-key-down (fn [e]

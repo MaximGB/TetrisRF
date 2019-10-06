@@ -2,8 +2,8 @@
   (:require [re-frame.core :as rf]
             [reagent.core :as reagent]
             [tetrisrf.effects]
-            [tetrisrf.handlers]
             [tetrisrf.subscriptions]
+            [tetrisrf.handlers]
             [tetrisrf.views.messages :refer [messages]]
             [tetrisrf.views.tetris-panel :refer [tetris-panel]]))
 
