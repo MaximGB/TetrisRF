@@ -9,6 +9,7 @@ pom.xml.asc
 /semantic/
 /resources/public/semantic
 /node_modules/
+/dist/
 .lein-deps-sum
 .lein-repl-history
 .lein-plugins/

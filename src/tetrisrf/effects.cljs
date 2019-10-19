@@ -23,3 +23,8 @@
  (fn [element-id]
    (->(.getElementById js/document element-id)
       (.focus))))
+
+(rf/reg-fx
+ :xsend
+ (fn [[xservice event]]
+   (.send xservice (name event))))

@@ -28,4 +28,4 @@
 (rf/reg-sub
  :next-tetramino-field
  (fn [db]
-   (get-in db [:next-tetramino-field])))
+   (:next-tetramino-field db)))

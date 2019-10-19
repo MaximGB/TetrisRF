@@ -1,8 +1,13 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.0"}
         org.clojure/clojurescript {:mvn/version "1.10.520"}
-        com.bhauman/figwheel-main {:mvn/version "0.2.3"}
         reagent/reagent {:mvn/version "0.8.1"}
         re-frame/re-frame {:mvn/version "0.10.6"}
-        net.mikera/core.matrix {:mvn/version "0.62.0"}}
- :paths ["src" "resources" "target"]
- :aliases {:fig {:main-opts ["-m" "figwheel.main"]}}}
+        net.mikera/core.matrix {:mvn/version "0.62.0"}
+        com.rpl/specter {:mvn/version "1.1.2"}}
+ :paths ["src" "resources"]
+ :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
+                              com.bhauman/figwheel-main {:mvn/version "0.2.3"}}
+                 :extra-paths ["target" "test"]}
+           :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
+           :min   {:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "dev"]}
+           :test  {:main-opts ["-m" "figwheel.main" "-co" "test.cljs.edn" "-m" tetrisrf.core-tests]}}}

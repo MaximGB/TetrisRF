@@ -26,6 +26,13 @@
 
 
 (rf/reg-event-fx
+ :xstate
+ (fn [cofx [_ state]]
+   (.log js/console (.-value state))
+   {}))
+
+
+(rf/reg-event-fx
  :action-new
  (fn [cofx]
    (let [db (:db cofx)
@@ -33,15 +40,15 @@
          next-tetramino (:next-tetramino db)
          next-tetramino-field (:next-tetramino-field db)
          next-next-tetramino (rand-nth tetraminos)]
-     (if (can-act? field #(place-tetramino-centered %1 next-tetramino))
-       {:db (assoc db
-                   :field (place-tetramino-centered field next-tetramino)
-                   :next-tetramino next-next-tetramino
-                   :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true))}
-       {:stop-timer (:timer db)
-        :db (assoc db
-                   :running false)
-        :dispatch [:game-over]}))))
+       (if (can-act? field #(place-tetramino-centered %1 next-tetramino))
+        {:db (assoc db
+                    :field (place-tetramino-centered field next-tetramino)
+                    :next-tetramino next-next-tetramino
+                    :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true))}
+        {:stop-timer (:timer db)
+         :db (assoc db
+                    :running false)
+         :dispatch [:game-over]}))))
 
 
 (rf/reg-event-db
@@ -107,7 +114,8 @@
                      :game-over false
                      :next-tetramino next-tetramino
                      :next-tetramino-field (place-tetramino-centered (make-next-tetramino-field) next-tetramino :center-v true)))
-        :dispatch [:action-new]}))))
+        :dispatch [:action-new]
+        :xsend [(:xservice db) :toggle]}))))
 
 
 (rf/reg-event-fx
