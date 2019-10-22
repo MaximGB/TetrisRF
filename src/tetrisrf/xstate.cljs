@@ -1,9 +1,17 @@
 (ns tetrisrf.xstate
+  (:refer-clojure
+   :exclude [clj->js])
   (:require [xstate :as xs]
             [com.rpl.specter :as s :include-macros true]
             [re-frame.core :as rf]
             [clojure.string :as cstr]
             [clojure.pprint :refer [pprint]]))
+
+
+(defn- clj->js
+  "Custom clj->js function, uses `str` to translate keywords to JS, thus `:kv` produces \":kv\" instead of \"kv\"."
+  [clj]
+  (clojure.core/clj->js clj :keyword-fn str))
 
 
 (defprotocol MachineProtocol
@@ -29,22 +37,6 @@
 
   (machine->xs-machine [this]
     (:xs-machine this)))
-
-
-;; TODO: remove this, seems I don't need it
-;; (def EVENTS (s/recursive-path []
-;;                               p
-;;                               [:states s/MAP-VALS (s/multi-path [:on s/MAP-KEYS]
-;;                                                                 p)]))
-
-
-;; (defn machine->events
-;;   "Returns set of all events machine can handle"
-;;   [machine]
-;;   (->> machine
-;;        (machine->config)
-;;        (s/traverse EVENTS)
-;;        (into #{})))
 
 
 (defn machine->xs-initial-state
@@ -91,92 +83,162 @@
                   :xs-machine (xs/Machine (clj->js config)
                                           (clj->js options))})))
 
+; --------------------------------------------------------------------------------------------------
 
 (defprotocol InterpreterProto
   "XState based interpreter protocol which uses re-frame facilities to send/recieve and handle events"
-  (interpreter->xs-state [this]
-    "Returns current interpreting machine state path.")
-  (interpreter->started? [this]
+  (interpreter->machine ^Machine [this]
+    "Returns currently interpreting machine.")
+  (interpreter->state ^string  [this]
+    "Returns currently active state id.")
+  (interpreter->started? ^boolean  [this]
     "Checks if interpreter has been started.")
-  (interpreter-start! [this]
+  (interpreter->defer-events? ^boolean [this]
+    "Checks if the interpreter is configured with defer-events? option.")
+  (interpreter-start! ^InterpreterProto [this]
     "Starts machine interpretation. Registers re-frame event handlers to recieve events of the machine.")
-  (interpreter-stop! [this]
+  (interpreter-stop! ^InterpreterProto [this]
     "Stops machine interpretation. Un-registers re-frame event handlers registered at (start) call.")
-  (interpreter-send! [this event params]
-    "Sends and event to the machine via re-frame facilities"))
+  (interpreter-send! ^InterpreterProto [this event]
+    "Sends an event to the machine via re-frame facilities."))
 
 
-;; Event sent to re-frame to make initial transition for a machine
-(def initial-transition-event ::initial-transition-event)
+(defprotocol -InterpreterProto
+  "Module private interpreter protocol, users should not implement or call it's methods."
+
+  (-interpreter-transition! [this state re-ctx]
+    "Does the state chart transition.")
+
+  (-interpreter-register-init-transition-event-handler ^InterpreterProto [this]
+    #_TODO:_rework_the_docs
+    "Register this particular interpreter initial transition event handler.
+
+     Every startchart starts from initial state, upon entring the state actions might be executed,
+     each action might have different set of interceptors defined, thus to provide those interceptors
+     in re-frame's `reg-event-ctx` event handler the event handler must be registered this those interceptors
+     collected and listed. So each interpreter uses unique event and registers unique initial transition event
+     handler with intereptors list collected from the actions and listed in call to `reg-event-fx`.")
+
+  (-interpreter-clear-init-transition-event-handler ^InterpreterProto [this]
+    #_TODO:_rework_the_docs
+    "Clears this particular interpreter unique initial transition event handler.
+
+     See `-register-init-transition-event-handler` for more information."))
+
+
+(defn uni-handler
+  "Universal re-frame event handler which translates re-frame event and payload into XState event and makes corresponding XState machine transition."
+  [vinterpreter ctx]
+  #_TODO
+  ctx)
+
+
+;; Event sent to re-frame to make initial transition for an interpreter
+(def initial-transition-event ::initial-xs-transition-event)
+
+;; Event send to re-frame to make other transitions for an interpreter
+(def transition-event ::xs-transition-event)
+
 
 (rf/reg-event-ctx
  initial-transition-event
  (fn [ctx]
-   (let [[_ interpreter] (get-in ctx [:coeffects :event])
-         xs-state (interpreter->xs-state interpreter)
-         actions (.-actions xs-state)
-         fx-map (areduce actions idx ret {}
-                  (let [action (aget actions idx)
-                        exec (.-exec action)
-                        action-result (exec ctx)]
-                    (if (map? action-result)
-                      (merge ret action-result)
-                      ret)))]
-     (assoc ctx :effects fx-map))))
+   (let [[_ vinterpreter] (get-in ctx [:coeffects :event])
+         machine (interpreter->machine vinterpreter)
+         xs-machine (machine->xs-machine machine)
+         xs-machine-w-context (.withContext xs-machine ctx)
+         xs-initial-state (.-initialState xs-machine-w-context)
+         actions (.-actions xs-initial-state)]
+     ;; Updating interpreter state
 
+     ;; Executing actions
+     (areduce actions idx ret ctx
+              (let [action (aget actions idx)
+                    exec (.-exec action)]
+                (exec ret))))))
 
-(defrecord Interpreter [machine state started? defer-events machine-events]
-
-  InterpreterProto
-
-  (interpreter->xs-state [this]
-    (machine->xs-machine (:machine this)))
-
-  (interpreter->started? [this]
-    (:started? this))
-
-  (interpreter-start! [this]
-    (let [started? (:started? this)]
-      (if started?
-        this
-        (let [m (:machine this)
-              initial-state (machine->xs-initial-state m)
-              events (or (:events this) (machine->events-at-state m))
-              result (assoc this
-                            :machine (assoc m :xs-machine initial-state)
-                            :machine-events events
-                            :started? true)]
-          (doseq [e events]
-            (rf/reg-event-fx e #({})))
-          (rf/dispatch [initial-transition-event result])
-          result))))
-
-  (interpreter-stop! [this]
-    (let [started? (:started? this)]
-      (if (not started?)
-        this
-        (let [events (:machine-events this)]
-          (doseq [e events]
-            (rf/clear-event e))
-          (assoc this
-                 :started? false)))))
-
-  (interpreter-send! [this event params]
-    #_(let [state (interpreter->state this)]
-      state)))
-
-
-;; Reify over a volatile thus implementing the protocol
 
 (defn- interpreter-
-  [machine-or-spec machine-options defer-events]
-  (map->Interpreter {:machine (if (instance? Machine machine-or-spec)
-                                machine-or-spec
-                                (machine machine-or-spec machine-options))
-                     :started? false
-                     :state nil
-                     :machine-events nil
-                     :defer-events defer-events}))
+  [machine-or-spec machine-options defer-events?]
+  (let [vid (str ::interpreter-id)
+        vinterpreter (volatile! {:machine (if (instance? Machine machine-or-spec)
+                                            machine-or-spec
+                                            (machine machine-or-spec machine-options))
+                                 :state nil
+                                 :started? false
+                                 :machine-events nil
+                                 :defer-events? defer-events?})]
+    (reify
+      IDeref
+
+      (-deref [this] @vinterpreter)
+
+      InterpreterProto
+
+      (interpreter->machine [this]
+        (:machine @vinterpreter))
+
+      (interpreter->state [this]
+        (if-let [state (:state @vinterpreter)]
+          (.-id state)))
+
+      (interpreter->started? [this]
+        (:started? @vinterpreter))
+
+      (interpreter->defer-events? [this]
+        (:defer-events? @vinterpreter))
+
+      (interpreter-start! [this]
+        (let [started? (interpreter->started? this)]
+          (if-not started?
+            ;; Starting
+            (let [interpreter @vinterpreter
+                  machine (:machine interpreter)
+                  events (or (:events interpreter)
+                             (machine->events-at-state machine))]
+              ;; Registering re-frame handlers for every possible state@event combination
+              (doseq [e events]
+                (rf/reg-event-ctx e
+                                  #_TODO:_Collect_interceptors
+                                  (fn [ctx]
+                                    (uni-handler this ctx))))
+              ;; Updating self
+              (vswap! assoc
+                      :started? true
+                      :machine-events events)
+              ;; Dispatching self-initialization event to transit to machine initial state
+              (rf/dispatch [initial-transition-event this])))
+          ;; Always return self
+          this))
+
+      (interpreter-stop! [this]
+        (let [started? (interpreter->started? this)]
+          (if started?
+            (let [interpreter @vinterpreter
+                  events (:machine-events interpreter)]
+              ;; Clearing re-frame handlers registered at interpreter-start!
+              (doseq [e events]
+                (rf/clear-event e))
+              ;; Updating self
+              (vswap! assoc
+                      :started? false)))
+          ;; Always return self
+          this))
+
+      (interpreter-send! [this event]
+        #_TODO)
+
+      -InterpreterProto
+
+      (-interpreter-transition! [this state re-ctx]
+        #_TODO)
+
+      (-interpreter-register-init-transition-event-handler [this]
+        #_TODO)
+
+      (-interpreter-clear-init-transition-event-handler [this]
+        #_TODO))))
+
 
 
 (defn interpreter
@@ -184,135 +246,108 @@
 
   ([machine-or-spec & [machine-options & kvargs :as vargs]]
    (if (keyword? machine-options)
-     (let [[& {:keys [defer-events] :or {defer-events false}}] vargs]
-       (interpreter- machine-or-spec {} defer-events))
-     (let [[& {:keys [defer-events] :or {defer-events false}}] kvargs]
-       (interpreter- machine-or-spec machine-options defer-events)))))
+     (let [[& {:keys [defer-events?] :or {defer-events? false}}] vargs]
+       (interpreter- machine-or-spec {} defer-events?))
+     (let [[& {:keys [defer-events?] :or {defer-events? false}}] kvargs]
+       (interpreter- machine-or-spec machine-options defer-events?)))))
 
 
+(defn wrap-db-action
+  "Returns an intercepting function which adopts re-frame context to the `handler` and injects handler result back into re-frame context.
+
+  `handler` is a function similar to re-frame's reg-event-db handler (db event-vector) -> db
+  The function also contains required interceptors in it's metadata."
+
+  ([handler]
+   (wrap-db-action [] handler))
+
+  ([interceptors handler]
+   (with-meta
+     (fn [ctx]
+       (let [db (get-in ctx [:coeffects :db])
+             event (get-in ctx [:coeffects :event])
+             new-db (or (handler db event) db)]
+         (-> ctx
+             ;; Assoc into both since there might be other action handlers which
+             ;; read from [:coeffects :db]
+             (assoc-in [:effects :db] new-db)
+             (assoc-in [:coeffects :db] new-db))))
+     {::xs-handler interceptors})))
 
 
-;; start return an atom which can recieve events
+(defn wrap-fx-action
+  "Returns an intercepting function which adopts re-frame context to the `handler` and injects handler result back into re-frame context.
 
-;; (def m (xs/Machine (clj->js {:id :test
-;;                              :initial :ready
-;;                              :type :parallel
-;;                              :states {:ready {:entry [:do1]}
-;;                                       :idle {:entry [:do2]}}})
-;;                    (clj->js {:actions {:do1 #(.log js/console "ready entry")
-;;                                        :do2 #(.log js/console "idle entry")}})))
+  `handler` is function similar to re-frame's reg-event-fx handler (cofx-map event-vector) -> fx-map.
+  The function also contains required interceptors in it's metadata."
 
-;; (def initial-state (.-initialState m))
+  ([handler]
+   (wrap-fx-action [] handler))
 
-;; (def initial-actions (.-actions initial-state))
-
-;; (areduce initial-actions
-;;          idx
-;;          ret
-;;          {}
-;;          (let [action (aget initial-actions idx)
-;;                exec (.-exec action)
-;;                r (exec)]
-;;            (if (map? r)
-;;              (merge ret m)
-;;              ret)))
-
-;; (defn machine
-;;   "Creates a XState machine with given definition and optional options"
-;;   ([definition]
-;;    (xs/Machine (clj->js definition)))
-;;   ([definition options]
-;;    (xs/Machine (clj->js definition) (clj->js options))))
+  ([interceptors handler]
+   (with-meta
+     (fn [ctx]
+       (let [cofx-map (:coeffects ctx)
+             event (:event cofx-map)
+             new-effects (handler cofx-map event)
+             effects (merge (:effects ctx) new-effects)]
+         (-> ctx
+             (assoc :effects effects)
+             ;; Special :db handling since there might be other action handlers
+             ;; reading :db from :coeffects
+             (#(let [new-db (get-in % [:effects :db])]
+                 (if new-db
+                   (assoc-in % [:coeffects :db] new-db)))))))
+     {::xs-handler interceptors})))
 
 
-;; (defn service
+(defn wrap-ctx-action
+  "Unlike `wrap-db-action` and `wrap-fx-action` with function doesn't wraps adopting code over given `handler`. There's no need.
 
-;;   ([machine-or-definition]
-;;    (let [machine (if (instance? xs/Machine machine-or-definition)
-;;                    machine-or-definition
-;;                    (machine machine-or-definition))
-;;          service-atom (atom machine)]
-;;      ;;
+  It just adds list of required interceptors to the handler metadata."
 
-;;      ))
+  ([handler]
+   (wrap-ctx-action [] handler))
 
-;;   ([definition options]
-;;    (service (machine definition options))))
+  ([interceptors handler]
+   (with-meta handler {::xs-handler interceptors})))
 
 
-;; (def a1 {:a (js/Date. 2019)})
+(defn wrap-db-guard
+  "TODO: docs"
 
-;; (def a2 {:a (js/Date. 2019)})
+  ([handler]
+   (wrap-db-guard [] handler))
 
-;; (= a1 a2)
-
-;; a1
-;; a2
-
-;; (defn- inject-machine-spec-value-accumulators [machine-spec acc])
-
-;; (defn- inject-machine-options-value-accumulators [machine-spec acc])
-
-;; (defn xinterpret
-;;   "Defines an XState machine interpreting service which automaticaly registers corresponding re-frame event handlers to recieve events via re-frame machinery."
-;;   [machine-spec machine-options]
-;;   (let [xservice (service machine-spec machine-options {:execute false})]))
+  ([interceptors handler]
+   (with-meta
+     handler
+     {::xs-handler interceptors})))
 
 
+(defn wrap-fx-guard
+  "TODO: docs"
+
+  ([handler]
+   (wrap-fx-guard [] handler))
+
+  ([interceptors handler]
+   (with-meta
+     handler
+     {::xs-handler interceptors})))
 
 
-;; (def machine-spec {:id :tetrisrf
-;;                    :initial :ready
-;;                    :states {:ready {:on {:toggle :ready}}}})
+(defn wrap-ctx-guard
+  "TODO: docs"
 
+  ([handler]
+   (wrap-ctx-guard [] handler))
 
-;; (defn create-xservice [on-state-change]
-;;   (-> machine-spec
-;;       (clj->js)
-;;       (xs/Machine.)
-;;       (xs/interpret.)
-;;       (.onTransition on-state-change)
-;;       (.start)))
+  ([interceptors handler]
+   (with-meta
+     handler
+     {::xs-handler interceptors})))
 
-
-;; (defn create-service [machine options]
-;;   (-> (xs/interpret machine options)
-;;       (.start)))
-
-
-;; (def test-machine (xs/Machine (clj->js {:id :test
-;;                                         :initial :ready
-;;                                         :states {:ready {:on {:toggle {:target :ready
-;;                                                                        :actions [:do]}}
-;;                                                          :entry [:entry]
-;;                                                          :exit [:exit]}}})
-;;                               (clj->js {:actions {:do #(do
-;;                                                          (.log js/console "do!")
-;;                                                          {:do 1})
-;;                                                   :entry #(do
-;;                                                             (.log js/console "entry!")
-;;                                                             {:entry 2})
-;;                                                   :exit #(do
-;;                                                            (.log js/console "exit!")
-;;                                                            {:exit 3})}})))
-
-;; (def test-service (create-service test-machine (clj->js {:execute false})))
-
-;; (.execute test-service (.send test-service (name :toggle)))
-
-;; (str (namespace ::test) "/" (name ::test))
-
-
-;; (defService myCompService {:id ::myCompService
-;;                            :initial ::ready
-;;                            :states {::ready {:on {::run {:target ::run
-;;                                                          :actions [:do-something]}}}
-;;                                     ::run {:entry [:do-other-thing]
-;;                                            :exit [:do-next-thing]
-;;                                            :on {::stop ::ready}}}})
-
-
-
-;; (send myCompService ::run 1 2 3)
-
-;; (defn send [service ])
+;; Event type XState works with
+;; {:type nil
+;;  :payload nil}

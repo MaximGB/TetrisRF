@@ -14,9 +14,16 @@
               interpreter
               interpreter-start!
               interpreter-stop!
-              interpreter-send!
-              interpreter->xs-state]]
-            [xstate :as jsxs]))
+              interpreter-send!]
+             :refer-macros
+             [db-action
+              fx-action
+              ctx-action
+              db-guard
+              fx-guard
+              ctx-guard]]
+            [xstate :as jsxs]
+            [re-frame.core :as rf]))
 
 (def test-machine-config-1 {:id :test-1
                             :initial :ready
@@ -31,25 +38,32 @@
 
 (def test-machine-config-2 {:id :test-2
                             :initial :ready
-                            :states {:ready {:entry [:in-ready :common-in]
-                                             :exit :out-ready
+                            :states {:ready {:entry [:in-ready-1 :in-ready-2]
+                                             :exit :out-ready-1
                                              :on {:go {:target :running
                                                        :cond [:can-run-now]
-                                                       :actions [:to-running, :common-action]}}
+                                                       :actions [:on-go-1, :on-go-2]}}
                                              :states  {:steady {:on {:go {:target :running
-                                                                          :actions :to-running}
+                                                                          :actions :on-go-1}
                                                                      :wait :steady}}}}
-                                     :running {:entry [:in-running :common-in]
-                                               :exit :out-running
+                                     :running {:entry [:in-running-1]
+                                               :exit :out-running-1
                                                :on {::stop {:target :ready
                                                            :cond [:can-stop-now]
-                                                           :actions [:to-ready :common-action]}}}}})
+                                                           :actions [:on-stop-1 :on-stop-2]}}}}})
 
 
-(def test-machine-options-2 {:actions {:in-ready {:exec #()
-                                                  :interceptors []}}
-                             :guards {:can-run-now {:exec #()
-                                                    :interceptors []}}})
+(def test-machine-options-2 {:actions {:in-ready-1 (db-action ['interceptor-1] [] nil)
+                                       :in-ready-2 nil
+                                       :out-ready-1 (fx-action ['interceptor-2] [] nil)
+                                       :on-go-1 nil
+                                       :on-go-2 nil
+                                       :in-running-1 nil
+                                       :out-running-1 nil
+                                       :on-stop-1 nil
+                                       :on-stop-2 nil}
+                             :guards {:can-run-now (db-guard ['interceptor-3] [] nil)
+                                      :can-stop-now (db-guard ['interceptor-4] [] nil)}})
 
 
 (deftest machine-creation
@@ -62,16 +76,6 @@
     (let [m (machine test-machine-config-1 test-machine-options-1)]
       (is (= (machine->config m) test-machine-config-1) "Machine config got unchanged")
       (is (= (machine->options m) test-machine-options-1) "Machine options got unchanged"))))
-
-
-;; TODO: remove this, seems I don't need it
-#_(deftest events-extraction
-
-  (testing "It should be possible to extract all events defined for the all machine states"
-    (let [m (machine test-machine-config-1)]
-      (is (= #{:check :go :go-next :go-self :stop}
-             (machine->events m))
-          "Events are extracted correctly"))))
 
 
 (deftest xstate-machine-creation
@@ -97,30 +101,3 @@
                   ":ready@:steady@:go"
                   ":ready@:steady@:wait"
                   ":running@:tetrisrf.xstate-test/stop"])))))
-
-
-
-(-> (interpreter {:id :ttt
-                  :initial :start
-                  :states {:start {:entry :started}}}
-
-                 {:actions {:started #(.log js/console "Started!!!")}})
-    (:machine)
-    (machine->xs-initial-state)
-    (#(.log js/console %)))
-
-(db-action [arr] body)
-(fx-action [arr] body)
-(ctx-action [arr] body)
-
-(db-guard [db event])
-(fx-guard [fx event])
-(ctx-guard [ctx event])
-
-(def test-fn (with-meta (fn []) {::action-type ::db}))
-
-(def test-fn (fn []))
-
-(.with-context machine ctx)
-
-(meta test-fn)
