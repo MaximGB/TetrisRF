@@ -7,7 +7,7 @@
    `(wrap-db-action (fn [])))
 
   ([params]
-   `(wrap-db-action (fn ~params))
+   `(wrap-db-action (fn ~params)))
 
   ([params body]
    `(wrap-db-action (fn ~params ~body)))

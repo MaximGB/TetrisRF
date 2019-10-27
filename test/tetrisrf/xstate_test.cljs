@@ -1,15 +1,14 @@
 (ns tetrisrf.xstate-test
   (:require [cljs.pprint :refer [pprint]]
-            [cljs.test :refer-macros [deftest is testing]]
+            [cljs.core.async :as asy]
+            [cljs.test :refer-macros [deftest is testing async]]
             [tetrisrf.xstate
              :as
              xs
              :refer
              [machine
               machine->config
-              machine->events-at-state
               machine->options
-              machine->xs-initial-state
               machine->xs-machine
               interpreter
               interpreter-start!
@@ -62,8 +61,8 @@
                                        :out-running-1 nil
                                        :on-stop-1 nil
                                        :on-stop-2 nil}
-                             :guards {:can-run-now (db-guard ['interceptor-3] [] nil)
-                                      :can-stop-now (db-guard ['interceptor-4] [] nil)}})
+                             :guards {:can-run-now (db-guard [])
+                                      :can-stop-now (db-guard [])}})
 
 
 (deftest machine-creation
@@ -85,19 +84,26 @@
       (is (instance? jsxs/StateNode (machine->xs-machine m))))))
 
 
-(deftest x-initial-state-retrieval
-
-  (testing "Machine should be able to return initial state instance"
-    (let [m (machine test-machine-config-1)]
-      (is (instance? jsxs/State (machine->xs-initial-state m))))))
-
-
-(deftest events-at-state-extraction
-
-  (testing "It should be possible to extract events at state from machine config"
-    (let [m (machine test-machine-config-2)
-          eas (machine->events-at-state m)]
-      (is (= eas [":ready@:go"
-                  ":ready@:steady@:go"
-                  ":ready@:steady@:wait"
-                  ":running@:tetrisrf.xstate-test/stop"])))))
+(deftest simple-machine-interpreter
+  (testing "Simple machine interpreter"
+    (async done
+           (let [c (asy/chan) ;; If something goes wrong we shouldn't wait too long
+                 rf-restore (rf/make-restore-fn)
+                 machine-spec {:id :simple-machine
+                               :initial :ready
+                               :states {:ready {:on {:toggle :running}
+                                                :entry :at-ready}
+                                        :running {:on {:toggle :ready}
+                                                  :entry :at-running}}}
+                 machine-opts {:actions {:at-running #(asy/put! c :at-running)
+                                         :at-ready #(asy/put! c :at-ready)}}
+                 interpreter (interpreter machine-spec machine-opts)]
+             (asy/go
+               (interpreter-start! interpreter)
+               (is (= :at-ready (asy/<! c)) "Machine initialized at `ready` state")
+               (interpreter-send! interpreter :toggle)
+               (is (= :at-running (asy/<! c)) "Machine toggled to `running` state")
+               (interpreter-send! interpreter :toggle)
+               (is (= :at-ready (asy/<! c)) "Machine toggled to `ready` state")
+               (rf-restore)
+               (done))))))
