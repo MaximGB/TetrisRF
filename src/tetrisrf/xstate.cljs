@@ -231,7 +231,7 @@
    (db-action [] handler))
 
   ([interceptors handler]
-   (let [wrapped-fn (fn [re-ctx]
+   (let [db-action (fn [re-ctx]
                       (let [db (rf/get-coeffect re-ctx :db)
                             event (rf/get-coeffect re-ctx :event)
                             new-db (or (handler db event) db)]
@@ -241,8 +241,9 @@
                             (rf/assoc-effect :db new-db)
                             (rf/assoc-coeffect :db new-db))))]
      {:xs-interceptors interceptors
-      :xs-exec wrapped-fn
-      :exec wrapped-fn})))
+      :xs-exec db-action
+      ;; unlike `xs-exec`, `exec` will be overriden to undefined by XState, but anyway I provide it just for consistency
+      :exec db-action})))
 
 
 (defn fx-action
@@ -255,37 +256,42 @@
    (fx-action [] handler))
 
   ([interceptors handler]
-   (with-meta
-     (fn [re-ctx]
-       (let [cofx (rf/get-coeffect re-ctx)
-             event (rf/get-coeffect re-ctx :event)
-             new-effects (handler cofx event)]
-         (-> re-ctx
-             ;; TODO: extract into util/merge-fx
-             ((fn [re-ctx]
-                (reduce (fn [re-ctx [effect-key effect-val]]
-                          (rf/assoc-effect re-ctx effect-key effect-val))
-                        re-ctx
-                        new-effects)))
-             ;; Special :db handling since there might be other action handlers
-             ;; reading :db from :coeffects
-             ((fn [re-ctx]
-                (rf/assoc-coeffect re-ctx
-                                   :db
-                                   (rf/get-effect re-ctx :db)))))))
-     {::xs-handler interceptors})))
+   (let [fx-action (fn [re-ctx]
+                     (let [cofx (rf/get-coeffect re-ctx)
+                           event (rf/get-coeffect re-ctx :event)
+                           new-effects (handler cofx event)]
+                       (-> re-ctx
+                           ;; TODO: extract into util/merge-fx
+                           ((fn [re-ctx]
+                              (reduce (fn [re-ctx [effect-key effect-val]]
+                                        (rf/assoc-effect re-ctx effect-key effect-val))
+                                      re-ctx
+                                      new-effects)))
+                           ;; Special :db handling since there might be other action handlers
+                           ;; reading :db from :coeffects
+                           ((fn [re-ctx]
+                              (rf/assoc-coeffect re-ctx
+                                                 :db
+                                                 (rf/get-effect re-ctx :db)))))))]
+     {:xs-interceptors interceptors
+      :xs-exec fx-action
+      ;; unlike `xs-exec`, `exec` will be overriden to undefined by XState, but anyway I provide it just for consistency
+      :exec fx-action})))
 
 
 (defn ctx-action
-  "Unlike `db-action` and `fx-action` with function doesn't wraps adopting code over given `handler`. There's no need.
+  "Unlike `db-action` and `fx-action` this function doesn't wrap adopting code over given `handler`. There's no need.
 
   It just adds list of required interceptors to the handler metadata."
 
   ([handler]
    (ctx-action [] handler))
 
-  ([interceptors handler]
-   (with-meta handler {::xs-handler interceptors})))
+  ([interceptors ctx-action]
+   {:xs-interceptors interceptors
+    :xs-exec ctx-action
+    ;; unlike `xs-exec`, `exec` will be overriden to undefined by XState, but anyway I provide it just for consistency
+    :exec ctx-action}))
 
 
 (defn db-guard
