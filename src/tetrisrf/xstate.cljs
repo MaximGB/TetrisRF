@@ -295,11 +295,14 @@
 
 
 (defn db-guard
-  "TODO: docs"
+  "Returns a guard function which adopts re-frame context to the `handler` providing it with `db` co-effect.
+
+  `handler` is a function similar to re-frame's reg-event-db handler but returns boolean: (db event-vector) -> boolean."
 
   ([handler]
-   #_TODO
-   handler))
+   (fn [re-ctx event]
+     (let [db (rf/get-coeffect re-ctx :db)]
+       (handler db event)))))
 
 
 (defn fx-guard
