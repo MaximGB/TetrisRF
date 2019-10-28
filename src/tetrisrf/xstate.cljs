@@ -1,9 +1,9 @@
 (ns tetrisrf.xstate
-  (:require-macros [tetrisrf.xstate :refer [db-action]])
   (:require [xstate :as xs]
-            [com.rpl.specter :as s :include-macros true]
             [re-frame.core :as rf]
-            [clojure.string :as cstr]
+            #_TODO:remove_commented
+            #_[com.rpl.specter :as s :include-macros true]
+            #_[clojure.string :as cstr]
             [clojure.pprint :refer [pprint]]))
 
 
@@ -74,21 +74,22 @@
      Returns re-frame context"))
 
 
-; Re-frame event handler serving as the bridget between re-frame and XState
+; Re-frame event handler serving as the bridge between re-frame and XState
 (rf/reg-event-ctx
  ::xs-transition-event
  (fn [re-ctx]
-   (let [[_ vinterpreter xs-event] (get-in re-ctx [:coeffects :event])]
+   (let [[_ vinterpreter xs-event] (rf/get-coeffect re-ctx :event)]
      (-interpreter-transition! vinterpreter xs-event re-ctx))))
 
+(get #js {:a-b 1} :a-b)
 
 (defn- execute-transition-actions
   "Executes given `actions` in re-frame context `re-ctx`."
   [re-ctx actions]
   (areduce actions idx ret re-ctx
            (let [action (aget actions idx)
-                 exec (.-exec action)
-                 action-result (and exec (exec ret))]
+                 exec (or (aget action "exec") (aget action "xs-exec") identity)
+                 action-result (exec ret)]
              (if (map? action-result)
                action-result
                ret))))
@@ -100,16 +101,15 @@
    If several actions require same interceptor the interceptor will be included only once."
   [actions]
   (last (areduce actions idx result [#{} []]
-                 (->> (aget actions idx)
-                      (meta)
-                      (::xs-handler)
-                      ((fn [action-interceptors]
-                         (let [[result-interceptors-set result-interceptors-vec] result
-                               action-interceptors-filtered (filterv (fn [interceptor]
-                                                                       (not (result-interceptors-set interceptor)))
-                                                                     action-interceptors)]
-                           [(into result-interceptors-set action-interceptors-filtered)
-                            (into result-interceptors-vec action-interceptors-filtered)])))))))
+                 (-> (aget actions idx)
+                     (aget "xs-interceptors")
+                     ((fn [action-interceptors]
+                        (let [[result-interceptors-set result-interceptors-vec] result
+                              action-interceptors-filtered (filterv (fn [interceptor]
+                                                                      (not (result-interceptors-set interceptor)))
+                                                                    action-interceptors)]
+                          [(into result-interceptors-set action-interceptors-filtered)
+                           (into result-interceptors-vec action-interceptors-filtered)])))))))
 
 
 ;; Re-frame interceptor executing state transition actions
@@ -219,71 +219,76 @@
                       {:type event
                        :payload payload}))
 
+; --------------------------------------------------------------------------------------------------
 
-(defn wrap-db-action
+(defn db-action
   "Returns an intercepting function which adopts re-frame context to the `handler` and injects handler result back into re-frame context.
 
   `handler` is a function similar to re-frame's reg-event-db handler (db event-vector) -> db
   The function also contains required interceptors in it's metadata."
 
   ([handler]
-   (wrap-db-action [] handler))
+   (db-action [] handler))
 
   ([interceptors handler]
-   (with-meta
-     (fn [ctx]
-       (let [db (get-in ctx [:coeffects :db])
-             event (get-in ctx [:coeffects :event])
-             new-db (or (handler db event) db)]
-         (-> ctx
-             ;; TODO: use assoc-effect/assoc-coeffect from rf
-             ;; Assoc into both since there might be other action handlers which
-             ;; read from [:coeffects :db]
-             (assoc-in [:effects :db] new-db)
-             (assoc-in [:coeffects :db] new-db))))
-     {::xs-handler interceptors})))
+   (let [wrapped-fn (fn [re-ctx]
+                      (let [db (rf/get-coeffect re-ctx :db)
+                            event (rf/get-coeffect re-ctx :event)
+                            new-db (or (handler db event) db)]
+                        (-> re-ctx
+                            ;; Assoc into both since there might be other action handlers which
+                            ;; read from `db` coeffect
+                            (rf/assoc-effect :db new-db)
+                            (rf/assoc-coeffect :db new-db))))]
+     {:xs-interceptors interceptors
+      :xs-exec wrapped-fn
+      :exec wrapped-fn})))
 
 
-(defn wrap-fx-action
+(defn fx-action
   "Returns an intercepting function which adopts re-frame context to the `handler` and injects handler result back into re-frame context.
 
   `handler` is function similar to re-frame's reg-event-fx handler (cofx-map event-vector) -> fx-map.
   The function also contains required interceptors in it's metadata."
 
   ([handler]
-   (wrap-fx-action [] handler))
+   (fx-action [] handler))
 
   ([interceptors handler]
    (with-meta
-     (fn [ctx]
-       (let [cofx-map (:coeffects ctx)
-             event (:event cofx-map)
-             new-effects (handler cofx-map event)
-             effects (merge (:effects ctx) new-effects)]
-         (-> ctx
-             (assoc :effects effects)
-             ;; TODO: use assoc-effect/assoc-coeffect from rf
+     (fn [re-ctx]
+       (let [cofx (rf/get-coeffect re-ctx)
+             event (rf/get-coeffect re-ctx :event)
+             new-effects (handler cofx event)]
+         (-> re-ctx
+             ;; TODO: extract into util/merge-fx
+             ((fn [re-ctx]
+                (reduce (fn [re-ctx [effect-key effect-val]]
+                          (rf/assoc-effect re-ctx effect-key effect-val))
+                        re-ctx
+                        new-effects)))
              ;; Special :db handling since there might be other action handlers
              ;; reading :db from :coeffects
-             (#(let [new-db (get-in % [:effects :db])]
-                 (if new-db
-                   (assoc-in % [:coeffects :db] new-db)))))))
+             ((fn [re-ctx]
+                (rf/assoc-coeffect re-ctx
+                                   :db
+                                   (rf/get-effect re-ctx :db)))))))
      {::xs-handler interceptors})))
 
 
-(defn wrap-ctx-action
-  "Unlike `wrap-db-action` and `wrap-fx-action` with function doesn't wraps adopting code over given `handler`. There's no need.
+(defn ctx-action
+  "Unlike `db-action` and `fx-action` with function doesn't wraps adopting code over given `handler`. There's no need.
 
   It just adds list of required interceptors to the handler metadata."
 
   ([handler]
-   (wrap-ctx-action [] handler))
+   (ctx-action [] handler))
 
   ([interceptors handler]
    (with-meta handler {::xs-handler interceptors})))
 
 
-(defn wrap-db-guard
+(defn db-guard
   "TODO: docs"
 
   ([handler]
@@ -291,7 +296,7 @@
    handler))
 
 
-(defn wrap-fx-guard
+(defn fx-guard
   "TODO: docs"
 
   ([handler]
@@ -299,7 +304,7 @@
    handler))
 
 
-(defn wrap-ctx-guard
+(defn ctx-guard
   "TODO: docs"
 
   ([handler]
