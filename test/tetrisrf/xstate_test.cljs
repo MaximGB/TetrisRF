@@ -40,40 +40,11 @@
                                            :states {:two {:on {:go-self :two
                                                                :stop :..ready}}}}}})
 
+
 (def test-machine-options-1 {:actions {:do #()}})
 
 
-(def test-machine-config-2 {:id :test-2
-                            :initial :ready
-                            :states {:ready {:entry [:in-ready-1 :in-ready-2]
-                                             :exit :out-ready-1
-                                             :on {:go {:target :running
-                                                       :cond [:can-run-now]
-                                                       :actions [:on-go-1, :on-go-2]}}
-                                             :states  {:steady {:on {:go {:target :running
-                                                                          :actions :on-go-1}
-                                                                     :wait :steady}}}}
-                                     :running {:entry [:in-running-1]
-                                               :exit :out-running-1
-                                               :on {::stop {:target :ready
-                                                           :cond [:can-stop-now]
-                                                           :actions [:on-stop-1 :on-stop-2]}}}}})
-
-
-(def test-machine-options-2 {:actions {:in-ready-1 (db-action ['interceptor-1] (fn []))
-                                       :in-ready-2 nil
-                                       :out-ready-1 (fx-action ['interceptor-2] (fn []))
-                                       :on-go-1 nil
-                                       :on-go-2 nil
-                                       :in-running-1 nil
-                                       :out-running-1 nil
-                                       :on-stop-1 nil
-                                       :on-stop-2 nil}
-                             :guards {:can-run-now (db-guard (fn []))
-                                      :can-stop-now (db-guard (fn []))}})
-
-
-#_(deftest machine-creation
+(deftest machine-creation
 
   (testing "Default machine options should be empty map"
     (let [m (machine test-machine-config-1)]
@@ -85,7 +56,7 @@
       (is (= (machine->options m) test-machine-options-1) "Machine options got unchanged"))))
 
 
-#_(deftest xstate-machine-creation
+(deftest xstate-machine-creation
 
   (testing "Machine record should hold instance of XState machine"
     (let [m (machine {})]
