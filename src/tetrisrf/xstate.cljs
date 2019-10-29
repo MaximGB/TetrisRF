@@ -68,20 +68,39 @@
 (defprotocol -InterpreterProto
   "Module private interpreter protocol, users should not implement or call it's methods."
 
-  (-interpreter-transition! [this xs-event re-ctx]
+  (-interpreter-transition! [this re-ctx]
     "Does the state chart transition.
 
      Returns re-frame context"))
+
+
+(defn re-ctx->vinterpreter
+  "Gets interpreter instance from re-frame context's `:event` co-effect."
+  [re-ctx]
+  (let [[_ vinterpreter] (rf/get-coeffect re-ctx :event)]
+    vinterpreter))
+
+
+(defn re-ctx->xs-event
+  "Gets `xs-event` structure from re-frame context's `:event` co-effect."
+  [re-ctx]
+  (let [[_ _ xs-event] (rf/get-coeffect re-ctx :event)]
+    xs-event))
+
+
+(defn re-ctx->xs-event-type
+  "Gets `xs-event` type from re-frame context's `:event` co-effect."
+  [re-ctx]
+  (first (re-ctx->xs-event re-ctx)))
 
 
 ; Re-frame event handler serving as the bridge between re-frame and XState
 (rf/reg-event-ctx
  ::xs-transition-event
  (fn [re-ctx]
-   (let [[_ vinterpreter xs-event] (rf/get-coeffect re-ctx :event)]
-     (-interpreter-transition! vinterpreter xs-event re-ctx))))
+   (let [vinterpreter (re-ctx->vinterpreter re-ctx)]
+     (-interpreter-transition! vinterpreter re-ctx))))
 
-(get #js {:a-b 1} :a-b)
 
 (defn- execute-transition-actions
   "Executes given `actions` in re-frame context `re-ctx`."
@@ -117,7 +136,7 @@
   (rf/->interceptor
    :id ::xs-actions-exec-interceptor
    :before (fn [re-ctx]
-             (let [[_ vinterpreter] (get-in re-ctx [:coeffects :event])
+             (let [vinterpreter (re-ctx->vinterpreter re-ctx)
                    xs-state (interpreter->state vinterpreter)
                    actions (.-actions xs-state)]
                (execute-transition-actions re-ctx actions)))))
@@ -163,7 +182,7 @@
                       assoc
                       :started? true)
               ;; Dispatching self-initialization event to transit to machine initial state
-              (interpreter-send! this ::xs-transition-event)))
+              (interpreter-send! this ::xs-init)))
           ;; Always return self
           this))
 
@@ -184,14 +203,18 @@
 
       -InterpreterProto
 
-      (-interpreter-transition! [this xs-event re-ctx]
+      (-interpreter-transition! [this re-ctx]
         (let [machine (interpreter->machine this)
               xs-machine (machine->xs-machine machine)
-              xs-machine-w-context (.withContext xs-machine re-ctx)
+              xs-event-type (re-ctx->xs-event-type re-ctx)
               xs-current-state (interpreter->state this)
               xs-new-state (if xs-current-state
-                             (.transition xs-machine-w-context xs-current-state (clj->js xs-event))
-                             (.-initialState xs-machine-w-context))
+                             (.transition xs-machine
+                                          (.from xs/State xs-current-state re-ctx)
+                                          ;; Only type is needed for XState to make transition
+                                          ;; Event payload handlers will take from `re-ctx` afterwards
+                                          (clj->js xs-event-type))
+                             (.-initialState (.withContext xs-machine re-ctx)))
               actions (.-actions xs-new-state)
               interceptors (actions->interceptors actions)]
           (vswap! vinterpreter
@@ -215,9 +238,7 @@
   "Sends an event to XState machine via re-frame facilities and initiates re-frame event processing using XState machine actions."
   [interpreter event & payload]
   (interpreter-send-! interpreter
-                      ;; This is how XState expects event to be formated
-                      {:type event
-                       :payload payload}))
+                      (into [event] payload)))
 
 ; --------------------------------------------------------------------------------------------------
 
@@ -232,14 +253,14 @@
 
   ([interceptors handler]
    (let [db-action (fn [re-ctx]
-                      (let [db (rf/get-coeffect re-ctx :db)
-                            event (rf/get-coeffect re-ctx :event)
-                            new-db (or (handler db event) db)]
-                        (-> re-ctx
-                            ;; Assoc into both since there might be other action handlers which
-                            ;; read from `db` coeffect
-                            (rf/assoc-effect :db new-db)
-                            (rf/assoc-coeffect :db new-db))))]
+                     (let [db (rf/get-coeffect re-ctx :db)
+                           xs-event (re-ctx->xs-event re-ctx)
+                           new-db (or (handler db xs-event) db)]
+                       (-> re-ctx
+                           ;; Assoc into both since there might be other action handlers which
+                           ;; read from `db` coeffect
+                           (rf/assoc-effect :db new-db)
+                           (rf/assoc-coeffect :db new-db))))]
      {:xs-interceptors interceptors
       :xs-exec db-action
       ;; unlike `xs-exec`, `exec` will be overriden to undefined by XState, but anyway I provide it just for consistency
@@ -258,8 +279,8 @@
   ([interceptors handler]
    (let [fx-action (fn [re-ctx]
                      (let [cofx (rf/get-coeffect re-ctx)
-                           event (rf/get-coeffect re-ctx :event)
-                           new-effects (handler cofx event)]
+                           xs-event (re-ctx->xs-event re-ctx)
+                           new-effects (handler cofx xs-event)]
                        (-> re-ctx
                            ;; TODO: extract into util/merge-fx
                            ((fn [re-ctx]
@@ -300,9 +321,10 @@
   `handler` is a function similar to re-frame's reg-event-db handler but returns boolean: (db event-vector) -> boolean."
 
   ([handler]
-   (fn [re-ctx event]
-     (let [db (rf/get-coeffect re-ctx :db)]
-       (handler db event)))))
+   (fn [re-ctx]
+     (let [db (rf/get-coeffect re-ctx :db)
+           xs-event (re-ctx->xs-event re-ctx)]
+       (handler db xs-event)))))
 
 
 (defn fx-guard

@@ -103,17 +103,21 @@
                                                             :on {:toggle :running}}
                                                     :running {:entry :in-running}}}
                                           {:actions {:in-ready (db-action
-                                                                (fn [db]
+                                                                (fn [db [event & payload]]
+                                                                  (is (= (event :tetrisrf.xstate/xs-init)) "Initialization event is correct")
+                                                                  (is (= (count payload) 0) "Initialization event has no payload")
                                                                   (casync/put! c (::db-action-test-key db))
                                                                   (assoc db ::db-action-test-key 2)))
                                                      :in-running (db-action
-                                                                  (fn [db]
+                                                                  (fn [db [event arg]]
+                                                                    (is (= (event :toggle)) "Transtion event is correct")
+                                                                    (is (= arg :arg) "Transition event argument is correct")
                                                                     (casync/put! c (::db-action-test-key db))
                                                                     (assoc db ::db-action-test-key 1)))}})]
              (casync/go
                (interpreter-start! interpreter)
                (is (= (casync/<! c) 1) "Got correct test key value from db-action handler")
-               (interpreter-send! interpreter :toggle)
+               (interpreter-send! interpreter :toggle :arg)
                (is (= (casync/<! c) 2) "Got updated test-key value from db-action handler")
                (done))))))
 
@@ -127,7 +131,9 @@
                                            :initial :ready
                                            :states {:ready {:entry :in-ready}}}
                                           {:actions {:in-ready (fx-action
-                                                                (fn [cofx]
+                                                                (fn [cofx [event & payload]]
+                                                                  (is (= (event :tetrisrf.xstate/xs-init)) "Initialization event is correct")
+                                                                  (is (= (count payload) 0) "Initialization event has no payload")
                                                                   (is (:event cofx) "Fx-handler recieved `cofx` map")
                                                                   {::async.put :done}))}})]
              (rf/reg-fx
@@ -150,7 +156,8 @@
                                            :initial :ready
                                            :states {:ready {:entry :in-ready}}}
                                           {:actions {:in-ready (ctx-action
-                                                                (fn [re-ctx]
+                                                                (fn [re-ctx & rest]
+                                                                  (is (= (count rest) 0) "Ctx handler doesn't recieve event and args, just bare context.")
                                                                   (let [event (rf/get-coeffect re-ctx :event)]
                                                                     (is event "Ctx-handler recieved `context`.")
                                                                     (rf/assoc-effect re-ctx ::async.put :done))))}})]
@@ -176,7 +183,9 @@
                                                     :running {:entry :done}}}
                                           {:actions {:done #(casync/put! c :done)}
                                            :guards {:can-run? (db-guard
-                                                               (fn [db event]
+                                                               (fn [db [event arg]]
+                                                                 (is (= event :toggle) "DB guard has recieved correct event.")
+                                                                 (is (= arg :arg) "DB guard has recieved correct event payload.")
                                                                  (::can-run? db)))}})]
              (rf/reg-event-db
               ::db-guard-test-setup
@@ -187,6 +196,10 @@
 
              (casync/go
                (interpreter-start! interpreter)
-               (interpreter-send! interpreter :toggle)
+               (interpreter-send! interpreter :toggle :arg)
                (is (= (casync/<! c) :done) "Db guard passed truthy value")
                (done))))))
+
+
+(deftest fx-guard-test
+  (testing "FX guard"))
