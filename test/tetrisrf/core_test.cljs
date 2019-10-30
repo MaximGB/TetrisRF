@@ -2,7 +2,7 @@
   (:require [cljs.pprint :refer [pprint]]
             [cljs.core.async :as casync]
             [cljs.test :refer [deftest is testing async use-fixtures]]
-            [tetrisrf.xstate
+            [tetrisrf.xstate.core
              :as
              xs
              :refer
