@@ -22,7 +22,7 @@
              ;; read from `db` coeffect
              (rf/assoc-effect :db new-db)
              (rf/assoc-coeffect :db new-db))))
-     {:xs-interceptors interceptors})))
+     {utils/xs-interceptors interceptors})))
 
 
 (defn fx-action
@@ -53,7 +53,7 @@
                 (rf/assoc-coeffect re-ctx
                                    :db
                                    (rf/get-effect re-ctx :db)))))))
-     {:xs-interceptors interceptors})))
+     {utils/xs-interceptors interceptors})))
 
 
 (defn ctx-action
@@ -68,4 +68,4 @@
    (with-meta
      (fn [re-ctx]
        (ctx-action re-ctx))
-     {:xs-interceptors interceptors})))
+     {utils/xs-interceptors interceptors})))

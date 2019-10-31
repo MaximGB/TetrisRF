@@ -27,7 +27,7 @@
    (let [options-normalized (utils/normalize-machine-options options)]
      (map->Machine {:config config
                     :options options
-                    :meta (merge (utils/machine-config->actions-interceptors config)
-                                 (utils/machine-options->actions-interceptors options-normalized))
+                    :interceptors (merge (utils/machine-config->actions-interceptors config :bare? false)
+                                         (utils/machine-options->actions-interceptors options-normalized :bare? false))
                     :xs-machine (xs/Machine (utils/prepare-machine-config config)
                                             (utils/prepare-machine-options options-normalized))}))))

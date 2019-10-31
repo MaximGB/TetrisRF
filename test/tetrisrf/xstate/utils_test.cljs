@@ -1,10 +1,14 @@
 (ns tetrisrf.xstate.utils-test
   (:require [cljs.test :refer [deftest is testing async use-fixtures]]
+            [goog.object :as gobject]
             [tetrisrf.xstate.core :refer [db-action]]
-            [tetrisrf.xstate.utils :refer [prepare-machine-config
+            [tetrisrf.xstate.utils :refer [xs-interceptors
+                                           prepare-machine-config
                                            prepare-machine-options
+                                           meta-actions->interceptors-map
                                            machine-config->actions-interceptors
                                            machine-options->actions-interceptors]]))
+
 
 (def test-machine-config {:id :test-2
                           :initial :ready
@@ -33,20 +37,68 @@
                                                 (fn [db]))}})
 
 
-(deftest machine-config-meta-extraction-test
-  (testing "Actions metadata extraction from machine config"
+(deftest meta-actions-to-interceptors-map-test
+  (testing "Interceptors extractions from meta actions sequence"
+    (let [a-fn (fn [])
+          b-c-fn (fn [])
+          actions [(with-meta a-fn {xs-interceptors [:a]})
+                   (with-meta b-c-fn {xs-interceptors [:b :c]})]
+          interceptors (meta-actions->interceptors-map actions)]
+      (is (= (get interceptors a-fn) [:a]) "A-fn interceptors are extracted correctly")
+      (is (= (get interceptors b-c-fn) [:b :c]) "B-C-fn interceptors are extracted correctly"))))
+
+
+(deftest machine-config-interceptors-extraction-test
+  (testing "Actions interceptors extraction from machine config"
     (let [meta (machine-config->actions-interceptors test-machine-config)
-          interceptors (into #{} (flatten (vals meta)))]
+          interceptors (into #{} (flatten (vals meta)))
+          fns (keys meta)]
+      (doseq [f fns]
+        (is (instance? js/Function f) "All meta keys are normal JS functions"))
       (is (= interceptors #{:test-coeffect-1 :test-coeffect-2 :test-coeffect-3 :test-coeffect-4}) "Config actions interceptors collected"))))
 
 
-(comment
-  (require '[com.rpl.specter :as s])
+(deftest machine-options-interceptors-extraction-test
+  (testing "Actions interceptors extranction from machine options"
+    (let [meta (machine-options->actions-interceptors test-machine-options)
+          interceptors (into #{} (flatten (vals meta)))
+          fns (keys meta)]
+      (doseq [f fns]
+        (is (instance? js/Function f) "All meta keys are normal JS functions"))
+      (is (= interceptors #{:test-coeffect-1 :test-coeffect-2}) "Options actions interceptors collected"))))
 
-  (def ACTIONS (s/recursive-path [] p [:states s/MAP-VALS (s/multi-path [:on s/MAP-VALS :actions s/ALL]
-                                                                        (s/must :entry)
-                                                                        (s/must :exit)
-                                                                        p)]))
 
-  (cljs.pprint/pprint "--------------------------------------")
-  (cljs.pprint/pprint (s/select ACTIONS {})))
+(deftest prepare-machine-config-test
+  (testing "Meta actions defined in machine config should be transformed to normal js/Function type and their meta data removed"
+    (let [entry-fn #()
+          exit-fn #()
+          on-fn-1 #()
+          on-fn-2 #()
+          config {:id :test-machine
+                  :initial :ready
+                  :states {:ready {:entry [(with-meta entry-fn {:a :a})]
+                                   :on {:toggle {:target :running
+                                                 :actions [(with-meta on-fn-1 {:b :b})
+                                                           (with-meta on-fn-2 {:c :c})]}}}
+                           :running {:exit (with-meta exit-fn {:d :d})}}}
+          config-prepared (prepare-machine-config config)
+          paths {[:states :ready :entry 0] entry-fn
+                 [:states :ready :on :toggle :actions 0] on-fn-1
+                 [:states :ready :on :toggle :actions 1] on-fn-2
+                 [:states :running :exit] exit-fn}]
+      (doseq [[path fn] paths]
+        (is (identical? (gobject/getValueByKeys config-prepared (clj->js path)) fn) "Metaless correct function found")))))
+
+
+(deftest prepare-machine-options-test
+  (testing "Meta actions defined in machine options should be transformed to normal js/Function type and their meta data removed"
+    (let [fn1 #()
+          fn2 #()
+          options {:guards {}
+                   :actions {:fn1 (with-meta fn1 {:a :a})
+                             :fn2 (with-meta fn2 {:b :b})}}
+          options-prepared (prepare-machine-options options)
+          paths {[:actions :fn1] fn1
+                 [:actions :fn2] fn2}]
+      (doseq [[path fn] paths]
+        (is (identical? (gobject/getValueByKeys options-prepared (clj->js path)) fn) "Metaless correct function found")))))

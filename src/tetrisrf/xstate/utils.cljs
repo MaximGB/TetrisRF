@@ -22,7 +22,10 @@
   (first (re-ctx->xs-event re-ctx)))
 
 
-; TODO: simplify the path
+(def xs-interceptors ::xs-interceptors)
+
+
+;; TODO: simplify the path
 (def MACHINE-CONFIG-ACTIONS (specter/recursive-path []
                                                     p
                                                     [:states
@@ -33,7 +36,11 @@
                                                                          p)]))
 
 
-(def MACHINE-OPTIONS-ACTIONS [])
+;; TODO: simplify the path
+(def MACHINE-OPTIONS-ACTIONS [(specter/must :actions)
+                              specter/MAP-VALS
+                              (specter/if-path seqable? specter/ALL specter/STAY)
+                              #(instance? MetaFn %)])
 
 
 (defn prepare-machine-config
@@ -43,7 +50,11 @@
    by JavaScript host, thus they should be converted back to normal `js/Function` type.
    Also the function does (clj->js) transformation."
   [config]
-  (clj->js config))
+  (->> config
+       (specter/transform MACHINE-CONFIG-ACTIONS
+                          (fn [meta-fn]
+                            (.-afn meta-fn)))
+       (clj->js)))
 
 
 (defn prepare-machine-options
@@ -53,19 +64,41 @@
    by JavaScript host, thus they should be converted back to normal `js/Function` type.
    Also the function does (clj->js) transformation."
   [options]
-  (clj->js options))
+  (->> options
+       (specter/transform MACHINE-OPTIONS-ACTIONS
+                          (fn [meta-fn]
+                            (.-afn meta-fn)))
+       (clj->js)))
 
+
+(defn meta-actions->interceptors-map
+  "Transforms sequence of actions with interceptors metadata into a map where keys are metaless normall JS functions and values are list of interceptors."
+  [actions & {:keys [bare?] :or {bare? true}}]
+  (reduce (fn [m action-fn]
+            (let [interceptors (xs-interceptors (meta action-fn))]
+              (assoc m
+                     (.-afn action-fn)
+                     (if-not bare?
+                       (map (fn [interceptor]
+                              (if (or (keyword? interceptor) (symbol? interceptor) (string? interceptor) (number? interceptor))
+                                (rf/inject-cofx interceptor)
+                                interceptor))
+                            interceptors)
+                       interceptors))))
+          {}
+          actions))
+
+
+(fn? (.-alert js/window))
 
 (defn machine-config->actions-interceptors
   "Extracts interceptros metadata from actions given in machine configuration.
 
    Returns a map with original action functions as keys and handlers' metadata as value,
    such that it can be easily looked up during runtime."
-  [config]
-  (reduce (fn [m action-fn]
-            (assoc m (.-afn action-fn) (:xs-interceptors (meta action-fn))))
-          {}
-          (specter/select MACHINE-CONFIG-ACTIONS config)))
+  [config & {:keys [bare?] :or {bare? true}}]
+  (meta-actions->interceptors-map (specter/select MACHINE-CONFIG-ACTIONS config)
+                                  :bare? bare?))
 
 
 (defn machine-options->actions-interceptors
@@ -73,9 +106,9 @@
 
    Returns a map with original action functions as keys and handlers' metadata as value,
    such that it can be easily looked up during runtime."
-  [options]
-  {}
-  #_(specter/select MACHINE-OPTIONS-ACTIONS options))
+  [options & {:keys [bare?] :or {bare? true}}]
+  (meta-actions->interceptors-map (specter/select MACHINE-OPTIONS-ACTIONS options)
+                                  :bare? bare?))
 
 
 (defn normalize-machine-options

@@ -130,7 +130,6 @@
              (rf/reg-cofx
               ::test-coeffect-1
               (fn [cofx]
-                (pprint "cofx")
                 (assoc cofx ::test-coeffect-1 1)))
 
              (rf/reg-cofx
@@ -141,7 +140,7 @@
              (rf/reg-cofx
               ::test-coeffect-3
               (fn [cofx val]
-                (assoc cofx ::test-coeffect-2 val)))
+                (assoc cofx ::test-coeffect-3 val)))
 
              (casync/go
                (interpreter-start! interpreter)

@@ -18,21 +18,23 @@
                ret))))
 
 
-(defn- actions->interceptors
+(defn- machine-actions->interceptors
   "Collects vector of unique action interceptors (#js [action]) -> [].
 
    If several actions require same interceptor the interceptor will be included only once."
-  [actions]
-  (last (areduce actions idx result [#{} []]
-                 (-> (aget actions idx)
-                     ((fn [action] []))
-                     ((fn [action-interceptors]
-                        (let [[result-interceptors-set result-interceptors-vec] result
-                              action-interceptors-filtered (filterv (fn [interceptor]
-                                                                      (not (result-interceptors-set interceptor)))
-                                                                    action-interceptors)]
-                          [(into result-interceptors-set action-interceptors-filtered)
-                           (into result-interceptors-vec action-interceptors-filtered)])))))))
+  [machine actions]
+  (let [interceptors (:interceptors machine)]
+    (last (areduce actions idx result [#{} []]
+                   (-> (aget actions idx)
+                       ((fn [action]
+                          (get interceptors (.-exec action))))
+                       ((fn [action-interceptors]
+                          (let [[result-interceptors-set result-interceptors-vec] result
+                                action-interceptors-filtered (filterv (fn [interceptor]
+                                                                        (not (result-interceptors-set interceptor)))
+                                                                      action-interceptors)]
+                            [(into result-interceptors-set action-interceptors-filtered)
+                             (into result-interceptors-vec action-interceptors-filtered)]))))))))
 
 
 ; Re-frame event handler serving as the bridge between re-frame and XState
@@ -129,7 +131,7 @@
                                           (clj->js xs-event-type))
                              (.-initialState (.withContext xs-machine re-ctx)))
               actions (.-actions xs-new-state)
-              interceptors (actions->interceptors actions)]
+              interceptors (machine-actions->interceptors machine actions)]
           (vswap! *interpreter
                   assoc
                   :state xs-new-state)
