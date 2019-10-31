@@ -46,3 +46,24 @@
                (interpreter-send! interpreter :toggle)
                (is (= :at-ready (casync/<! c)) "Machine toggled to `ready` state")
                (done))))))
+
+
+(deftest multiple-actions-test
+  (testing "Multiple actions execution and their order of execution")
+  (async done
+         (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
+               interpreter (interpreter {:id :simple-machine
+                                         :initial :ready
+                                         :states {:ready {:on {:toggle {:target :running
+                                                                        :actions [:one :two :three]}}}
+                                                  :running {}}}
+                                        {:actions {:one #(casync/put! c :one)
+                                                   :two #(casync/put! c :two)
+                                                   :three #(casync/put! c :three)}})]
+           (casync/go
+             (interpreter-start! interpreter)
+             (interpreter-send! interpreter :toggle)
+             (is (= (casync/<! c) :one) "Action :one executed")
+             (is (= (casync/<! c) :two) "Action :two executed")
+             (is (= (casync/<! c) :three) "Action :three executed")
+             (done)))))

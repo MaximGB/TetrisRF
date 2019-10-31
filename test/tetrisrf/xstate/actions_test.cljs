@@ -1,6 +1,7 @@
 (ns tetrisrf.xstate.actions-test
   (:require [cljs.core.async :as casync]
             [cljs.test :refer [deftest is testing async use-fixtures]]
+            [cljs.pprint :refer [pprint]]
             [tetrisrf.xstate.core :as xs
                                   :refer [interpreter
                                           interpreter-start!
@@ -103,4 +104,47 @@
              (casync/go
                (interpreter-start! interpreter)
                (is (= (casync/<! c) :done) "Got correct effect from ctx-action handler")
+               (done))))))
+
+
+(deftest db-action-interceptors-test
+  (testing "DB action interceptors injection"
+    (async done
+           (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
+                 interpreter (interpreter {:id :simple-machine
+                                           :initial :ready
+                                           :states {:ready {:on {:toggle {:target :running
+                                                                          :actions :to-running}}}
+                                                    :running {:entry [:in-running :check-coeffects]}}}
+                                          {:actions {:to-running (db-action
+                                                                  [::test-coeffect-1 ::test-coeffect-2]
+                                                                  identity)
+                                                     :in-running (db-action
+                                                                  [(rf/inject-cofx ::test-coeffect-3 3)]
+                                                                  identity)
+                                                     :check-coeffects (fn [re-ctx]
+                                                                        (casync/put! c [(rf/get-coeffect re-ctx ::test-coeffect-1)
+                                                                                        (rf/get-coeffect re-ctx ::test-coeffect-2)
+                                                                                        (rf/get-coeffect re-ctx ::test-coeffect-3)]))}})]
+
+             (rf/reg-cofx
+              ::test-coeffect-1
+              (fn [cofx]
+                (pprint "cofx")
+                (assoc cofx ::test-coeffect-1 1)))
+
+             (rf/reg-cofx
+              ::test-coeffect-2
+              (fn [cofx]
+                (assoc cofx ::test-coeffect-2 2)))
+
+             (rf/reg-cofx
+              ::test-coeffect-3
+              (fn [cofx val]
+                (assoc cofx ::test-coeffect-2 val)))
+
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :toggle)
+               (is (= (casync/<! c) [1 2 3]) "All coeffects are injected")
                (done))))))

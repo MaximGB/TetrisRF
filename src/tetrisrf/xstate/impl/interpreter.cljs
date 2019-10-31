@@ -25,7 +25,7 @@
   [actions]
   (last (areduce actions idx result [#{} []]
                  (-> (aget actions idx)
-                     (aget "xs-interceptors")
+                     ((fn [action] []))
                      ((fn [action-interceptors]
                         (let [[result-interceptors-set result-interceptors-vec] result
                               action-interceptors-filtered (filterv (fn [interceptor]

@@ -1,11 +1,9 @@
 (ns tetrisrf.xstate.machine-test
   (:require [cljs.test :refer [deftest is testing async use-fixtures]]
-            [tetrisrf.xstate.core
-             :as xs
-             :refer [machine
-                     machine->config
-                     machine->options
-                     machine->xs-machine]]
+            [tetrisrf.xstate.core :refer [machine
+                                          machine->config
+                                          machine->options
+                                          machine->xs-machine]]
             [xstate :as jsxs]))
 
 
