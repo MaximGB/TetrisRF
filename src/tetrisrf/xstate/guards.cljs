@@ -2,6 +2,16 @@
   (:require [tetrisrf.xstate.utils :as utils]
             [re-frame.core :as rf]))
 
+(defn ev-guard
+  "Returns a guard function which adopts re-frame context to the `handler` providing it with just event sent.
+
+   `handler` is a function which recieves destructured event vector sent as it's arguments (& event) -> boolean."
+  [handler]
+  (fn [re-ctx]
+    (let [xs-event (utils/re-ctx->xs-event re-ctx)]
+      (apply handler xs-event))))
+
+
 (defn db-guard
   "Returns a guard function which adopts re-frame context to the `handler` providing it with `db` co-effect.
 

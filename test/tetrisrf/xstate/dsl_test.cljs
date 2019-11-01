@@ -47,7 +47,7 @@
 
 
 (deftest defining-machine-test
-  (testing "Machine DLS test"
+  (testing "Machine DSL test"
     (async done
 
            (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long

@@ -5,6 +5,7 @@
                                   :refer [interpreter!
                                           interpreter-start!
                                           interpreter-send!
+                                          ev-guard
                                           db-guard
                                           fx-guard
                                           ctx-guard]]
@@ -17,6 +18,30 @@
   :each
   {:before (fn [] (vreset! rf-checkpoint (rf/make-restore-fn)))
    :after (fn [] (@rf-checkpoint))})
+
+
+(deftest ev-guard-test
+  (testing "Event guard"
+    (async done
+           (let [c (casync/timeout 100)
+                 interpreter (interpreter! {:id :simple-machine
+                                            :initial :ready
+                                            :states {:ready {:on {:check [{:cond :filter-age-gte :actions #(casync/put! c :allow)}
+                                                                          {:cond :filter-age-lt  :actions #(casync/put! c :deny) }]}}}}
+
+                                           {:guards {:filter-age-lt (ev-guard
+                                                                     (fn [_ age]
+                                                                       (< age 18)))
+                                                     :filter-age-gte (ev-guard
+                                                                      (fn [_ age]
+                                                                        (>= age 18)))}})]
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :check 16)
+               (is (= (casync/<! c) :deny) "Underage is not allowed")
+               (interpreter-send! interpreter :check 20)
+               (is (= (casync/<! c) :allow) "Overage is allowed")
+               (done))))))
 
 
 (deftest db-guard-test

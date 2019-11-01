@@ -37,31 +37,29 @@
    `(machine-add-action! ~var-name ~id (ctx-action ~interceptors ~action-fn))))
 
 
+(defmacro def-guard-ev
+  "Adds a EV-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
+
+  ([var-name id guard-fn]
+   `(machine-add-guard! ~var-name ~id (ev-guard ~guard-fn))))
+
+
 (defmacro def-guard-db
   "Adds a DB-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
 
-  ([var-name id guard-fn]
-   `(machine-add-guard! ~var-name ~id (db-guard ~guard-fn)))
-
-  ([var-name id interceptors guard-fn]
-   `(machine-add-guard! ~var-name ~id (db-guard ~interceptors ~guard-fn))))
+  [var-name id guard-fn]
+  `(machine-add-guard! ~var-name ~id (db-guard ~guard-fn)))
 
 
 (defmacro def-guard-fx
   "Adds a FX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
 
-  ([var-name id guard-fn]
+  [var-name id guard-fn]
    `(machine-add-guard! ~var-name ~id (fx-guard ~guard-fn)))
-
-  ([var-name id interceptors guard-fn]
-   `(machine-add-guard! ~var-name ~id (fx-guard ~interceptors ~guard-fn))))
 
 
 (defmacro def-guard-ctx
   "Adds a CTX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
 
-  ([var-name id guard-fn]
+  [var-name id guard-fn]
    `(machine-add-guard! ~var-name ~id (ctx-guard ~guard-fn)))
-
-  ([var-name id interceptors guard-fn]
-   `(machine-add-guard! ~var-name ~id (ctx-guard ~interceptors ~guard-fn))))

@@ -34,6 +34,7 @@
 (def fx-action actions/fx-action)
 (def ctx-action actions/ctx-action)
 
+(def ev-guard guards/ev-guard)
 (def db-guard guards/db-guard)
 (def fx-guard guards/fx-guard)
 (def ctx-guard guards/ctx-guard)
