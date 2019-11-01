@@ -2,7 +2,7 @@
   (:require [cljs.core.async :as casync]
             [cljs.test :refer [deftest is testing async use-fixtures]]
             [tetrisrf.xstate.core :as xs
-                                  :refer [interpreter
+                                  :refer [interpreter!
                                           interpreter-start!
                                           interpreter-send!
                                           db-guard
@@ -23,17 +23,18 @@
   (testing "DB guard"
     (async done
            (let [c (casync/timeout 100)
-                 interpreter (interpreter {:id :simple-machine
-                                           :initial :ready
-                                           :states {:ready {:on {:toggle {:target :running
-                                                                          :cond :can-run?}}}
-                                                    :running {:entry :done}}}
-                                          {:actions {:done #(casync/put! c :done)}
-                                           :guards {:can-run? (db-guard
-                                                               (fn [db [event arg]]
-                                                                 (is (= event :toggle) "DB guard has recieved correct event.")
-                                                                 (is (= arg :arg) "DB guard has recieved correct event payload.")
-                                                                 (::can-run? db)))}})]
+                 interpreter (interpreter! {:id :simple-machine
+                                            :initial :ready
+                                            :states {:ready {:on {:toggle {:target :running
+                                                                           :cond :can-run?}}}
+                                                     :running {:entry :done}}}
+
+                                           {:actions {:done #(casync/put! c :done)}
+                                            :guards {:can-run? (db-guard
+                                                                (fn [db [event arg]]
+                                                                  (is (= event :toggle) "DB guard has recieved correct event.")
+                                                                  (is (= arg :arg) "DB guard has recieved correct event payload.")
+                                                                  (::can-run? db)))}})]
              (rf/reg-event-db
               ::db-guard-test-setup
               (fn [db]
@@ -52,18 +53,19 @@
   (testing "FX guard")
     (async done
            (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
-                 interpreter (interpreter {:id :simple-machine
-                                           :initial :ready
-                                           :states {:ready {:on {:toggle {:target :running
-                                                                          :cond :can-run?}}}
-                                                    :running {:entry :done}}}
-                                          {:actions {:done #(casync/put! c :done)}
-                                           :guards {:can-run? (fx-guard
-                                                               (fn [cofx [event arg]]
-                                                                 (is (= event :toggle) "Fx-guard has recieved correct event.")
-                                                                 (is (= arg :arg) "Fx-guard has recieved correct event payload.")
-                                                                 (is (:event cofx) "Fx-handler recieved `cofx` map")
-                                                                 (::can-run? (:db cofx))))}})]
+                 interpreter (interpreter! {:id :simple-machine
+                                            :initial :ready
+                                            :states {:ready {:on {:toggle {:target :running
+                                                                           :cond :can-run?}}}
+                                                     :running {:entry :done}}}
+
+                                           {:actions {:done #(casync/put! c :done)}
+                                            :guards {:can-run? (fx-guard
+                                                                (fn [cofx [event arg]]
+                                                                  (is (= event :toggle) "Fx-guard has recieved correct event.")
+                                                                  (is (= arg :arg) "Fx-guard has recieved correct event payload.")
+                                                                  (is (:event cofx) "Fx-handler recieved `cofx` map")
+                                                                  (::can-run? (:db cofx))))}})]
              (rf/reg-event-db
               ::db-guard-test-setup
               (fn [db]
@@ -82,17 +84,18 @@
   (testing "Ctx guard")
     (async done
            (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
-                 interpreter (interpreter {:id :simple-machine
-                                           :initial :ready
-                                           :states {:ready {:on {:toggle {:target :running
-                                                                          :cond :can-run?}}}
-                                                    :running {:entry :done}}}
-                                          {:actions {:done #(casync/put! c :done)}
-                                           :guards {:can-run? (ctx-guard
-                                                               (fn [re-ctx & rest]
-                                                                 (is (= (count rest) 0) "Ctx guard doesn't recieve event and args, just bare context.")
-                                                                 (let [db (rf/get-coeffect re-ctx :db)]
-                                                                   (::can-run? db))))}})]
+                 interpreter (interpreter! {:id :simple-machine
+                                            :initial :ready
+                                            :states {:ready {:on {:toggle {:target :running
+                                                                           :cond :can-run?}}}
+                                                     :running {:entry :done}}}
+
+                                           {:actions {:done #(casync/put! c :done)}
+                                            :guards {:can-run? (ctx-guard
+                                                                (fn [re-ctx & rest]
+                                                                  (is (= (count rest) 0) "Ctx guard doesn't recieve event and args, just bare context.")
+                                                                  (let [db (rf/get-coeffect re-ctx :db)]
+                                                                    (::can-run? db))))}})]
              (rf/reg-event-db
               ::db-guard-test-setup
               (fn [db]

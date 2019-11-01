@@ -6,12 +6,19 @@
             [tetrisrf.xstate.actions :as actions]))
 
 
-(def machine->config protocols/machine->config)
-(def machine->options protocols/machine->options)
-(def machine->xs-machine protocols/machine->xs-machine)
+(def machine->config machine/machine->config)
+(def machine->options machine/machine->options)
+(def machine->interceptors machine/machine->interceptors)
+(def machine->xs-machine machine/machine->xs-machine)
 
 (def Machine machine/Machine)
 (def machine machine/machine)
+
+(def machine<-options machine/machine<-options)
+
+(def machine! machine/machine!)
+(def machine-add-guard! machine/machine-add-guard!)
+(def machine-add-action! machine/machine-add-action!)
 
 (def interpreter->machine protocols/interpreter->machine)
 (def interpreter->state protocols/interpreter->state)
@@ -19,10 +26,8 @@
 (def interpreter->defer-events? protocols/interpreter->defer-events?)
 (def interpreter-start! protocols/interpreter-start!)
 (def interpreter-stop! protocols/interpreter-stop!)
-(def interpreter-send-! protocols/interpreter-send-!)
-(def -interpreter-transition! protocols/-interpreter-transition!)
 
-(def interpreter interpreter/interpreter)
+(def interpreter! interpreter/interpreter!)
 (def interpreter-send! interpreter/interpreter-send!)
 
 (def db-action actions/db-action)

@@ -1,6 +1,6 @@
 (ns tetrisrf.xstate.protocols)
 
-(defprotocol MachineProtocol
+(defprotocol MachineProto
   "XState based machine protocol.
 
    The protocol is used to obtain machine config/options unaltered by clj->js/js->clj transformations."
@@ -8,8 +8,18 @@
     "Returns machine config as a Clojure map")
   (machine->options [this]
     "Returns machine options as a Clojure map")
-  (machine->xs-machine [this]
+  (-machine->interceptors [this]
+    "Returns map of machine actions interceptors")
+  (-machine->xs-machine [this]
     "Returns XState machine instance"))
+
+
+(defprotocol -MachineProto
+  "XState based referential machine protocol.
+
+   The protocol is needed to implement machine definition DSL."
+  (-machine<-options [this apply-fn args]
+    "Changes machine options by applying `apply-fn` to current machine options and optional args"))
 
 
 (defprotocol InterpreterProto
@@ -26,9 +36,8 @@
     "Starts machine interpretation. Registers re-frame event handlers to recieve events of the machine.")
   (interpreter-stop! ^InterpreterProto [this]
     "Stops machine interpretation. Un-registers re-frame event handlers registered at (start) call.")
-  (interpreter-send-! ^InterpreterProto [this event]
-    "Sends an event to the machine via re-frame facilities.
-     `event` is [event & payload]"))
+  (-interpreter-send! ^InterpreterProto [this event]
+    "Sends an event to the machine via re-frame facilities. `event` is [event & payload]."))
 
 
 (defprotocol -InterpreterProto

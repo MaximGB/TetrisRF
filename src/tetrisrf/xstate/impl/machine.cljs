@@ -4,8 +4,28 @@
             [xstate :as xs]))
 
 
-(defrecord Machine [config options xs-machine meta]
-  protocols/MachineProtocol
+(def machine->config protocols/machine->config)
+(def machine->options protocols/machine->options)
+(def machine->interceptors (memoize protocols/-machine->interceptors))
+(def machine->xs-machine (memoize protocols/-machine->xs-machine))
+
+
+(defn- make-machine-interceptors
+  "Extracts interceptors map from machine config and options."
+  [config options]
+  (merge (utils/machine-config->actions-interceptors config :bare? false)
+         (utils/machine-options->actions-interceptors options :bare? false)))
+
+
+(defn- make-machine-xs-machine
+  "Creates js/XState machine instance from config and options."
+  [config options]
+  (xs/Machine (utils/prepare-machine-config config)
+              (utils/prepare-machine-options options)))
+
+
+(defrecord Machine [config options]
+  protocols/MachineProto
 
   (machine->config [this]
     (:config this))
@@ -13,8 +33,15 @@
   (machine->options [this]
     (:options this))
 
-  (machine->xs-machine [this]
-    (:xs-machine this)))
+  (-machine->interceptors [this]
+    (let [config (machine->config this)
+          options (machine->options this)]
+      (make-machine-interceptors config options)))
+
+  (-machine->xs-machine [this]
+    (let [config (machine->config this)
+          options (machine->options this)]
+      (make-machine-xs-machine config options))))
 
 
 (defn machine
@@ -24,10 +51,63 @@
    (machine config {}))
 
   ([config options]
-   (let [options-normalized (utils/normalize-machine-options options)]
-     (map->Machine {:config config
-                    :options options
-                    :interceptors (merge (utils/machine-config->actions-interceptors config :bare? false)
-                                         (utils/machine-options->actions-interceptors options-normalized :bare? false))
-                    :xs-machine (xs/Machine (utils/prepare-machine-config config)
-                                            (utils/prepare-machine-options options-normalized))}))))
+   (map->Machine {:config config
+                  :options options})))
+
+
+(defn machine!
+  "Creates reference to a XState based machine which can be updated in-place.
+
+   This kind of machine is needed for machine definition DSL."
+  [config]
+
+  (let [*machine (volatile! (machine config))]
+    (reify
+      IDeref
+
+      (-deref [this] @*machine)
+
+      protocols/MachineProto
+
+      (machine->config [this]
+        (protocols/machine->config @*machine))
+
+      (machine->options [this]
+        (protocols/machine->options @*machine))
+
+      (-machine->interceptors [this]
+        (protocols/-machine->interceptors @*machine))
+
+      (-machine->xs-machine [this]
+        (protocols/-machine->xs-machine @*machine))
+
+      protocols/-MachineProto
+
+      (-machine<-options [this apply-fn args]
+        (vswap! *machine
+                assoc
+                :options
+                (apply apply-fn (:options @*machine) args))
+        this))))
+
+
+(defn machine<-options
+  "Sets machine options as if (apply apply-fn current-options args)."
+  [*machine apply-fn & args]
+  (protocols/-machine<-options *machine apply-fn args))
+
+
+(defn machine-add-action!
+  "Adds an action with `id` to machine options."
+  [*machine id action-fn]
+  (machine<-options *machine
+                    (fn [options]
+                      (assoc-in options [:actions id] action-fn))))
+
+
+(defn machine-add-guard!
+  "Adds a guard with `id` to machine options."
+  [*machine id guard-fn]
+  (machine<-options *machine
+                    (fn [options]
+                      (assoc-in options [:guards id] guard-fn))))

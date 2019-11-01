@@ -1,18 +1,13 @@
 (ns tetrisrf.xstate.interpreter-test
-  (:require
-   [cljs.test :refer [deftest is testing async use-fixtures]]
-   [cljs.core.async :as casync]
-   [re-frame.core :as rf]
-   [tetrisrf.xstate.core
-    :as
-    xs
-    :refer
-    [machine
-     interpreter
-     interpreter->machine
-     interpreter-start!
-     interpreter-stop!
-     interpreter-send!]]))
+  (:require [cljs.test :refer [deftest is testing async use-fixtures]]
+            [cljs.core.async :as casync]
+            [re-frame.core :as rf]
+            [tetrisrf.xstate.core :as xs :refer [machine
+                                                 interpreter!
+                                                 interpreter->machine
+                                                 interpreter-start!
+                                                 interpreter-stop!
+                                                 interpreter-send!]]))
 
 (def rf-checkpoint (volatile! nil))
 
@@ -20,9 +15,6 @@
   :each
   {:before (fn [] (vreset! rf-checkpoint (rf/make-restore-fn)))
    :after (fn [] (@rf-checkpoint))})
-
-
-;; TODO: test for secondary methods
 
 
 (deftest simple-machine-interpreter
@@ -37,7 +29,7 @@
                                                   :entry :at-running}}}
                  machine-opts {:actions {:at-running #(casync/put! c :at-running)
                                          :at-ready #(casync/put! c :at-ready)}}
-                 interpreter (interpreter machine-spec machine-opts)]
+                 interpreter (interpreter! machine-spec machine-opts)]
              (casync/go
                (interpreter-start! interpreter)
                (is (= :at-ready (casync/<! c)) "Machine initialized at `ready` state")
@@ -52,14 +44,14 @@
   (testing "Multiple actions execution and their order of execution")
   (async done
          (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
-               interpreter (interpreter {:id :simple-machine
-                                         :initial :ready
-                                         :states {:ready {:on {:toggle {:target :running
-                                                                        :actions [:one :two :three]}}}
-                                                  :running {}}}
-                                        {:actions {:one #(casync/put! c :one)
-                                                   :two #(casync/put! c :two)
-                                                   :three #(casync/put! c :three)}})]
+               interpreter (interpreter! {:id :simple-machine
+                                          :initial :ready
+                                          :states {:ready {:on {:toggle {:target :running
+                                                                         :actions [:one :two :three]}}}
+                                                   :running {}}}
+                                         {:actions {:one #(casync/put! c :one)
+                                                    :two #(casync/put! c :two)
+                                                    :three #(casync/put! c :three)}})]
            (casync/go
              (interpreter-start! interpreter)
              (interpreter-send! interpreter :toggle)

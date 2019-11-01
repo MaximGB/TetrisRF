@@ -3,7 +3,11 @@
             [tetrisrf.xstate.core :refer [machine
                                           machine->config
                                           machine->options
-                                          machine->xs-machine]]
+                                          machine->interceptors
+                                          machine->xs-machine
+                                          machine!
+                                          machine-add-action!
+                                          machine-add-guard!]]
             [xstate :as jsxs]))
 
 
@@ -13,13 +17,13 @@
                                                   :check :ready}}
                                      :one {:on {:go-next :two}
                                            :states {:two {:on {:go-self :two
-                                                               :stop :..ready}}}}}})
+                                                               :stop :ready}}}}}})
 
 
 (def test-machine-options-1 {:actions {:do #()}})
 
 
-(deftest machine-creation
+(deftest machine-creation-test
 
   (testing "Default machine options should be empty map"
     (let [m (machine test-machine-config-1)]
@@ -31,8 +35,23 @@
       (is (= (machine->options m) test-machine-options-1) "Machine options got unchanged"))))
 
 
-(deftest xstate-machine-creation
+(deftest xstate-machine-creation-test
 
   (testing "Machine record should hold instance of XState machine"
     (let [m (machine {})]
       (is (instance? jsxs/StateNode (machine->xs-machine m))))))
+
+
+(deftest referential-machine-options-modification-test
+
+  (testing "Referential machine options updating"
+
+    (let [*m (machine! test-machine-config-1)
+          guard #()
+          action #()]
+      (machine-add-guard! *m :guard guard)
+      (machine-add-action! *m :action action)
+      (is (= (machine->options *m)
+             {:guards {:guard guard}
+              :actions {:action action}})
+          "Referential machine options updated correctly"))))

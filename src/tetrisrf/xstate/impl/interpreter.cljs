@@ -6,16 +6,29 @@
             [xstate :as xs]))
 
 
+(declare interpreter-send!)
+
+
 (defn- execute-transition-actions
   "Executes given `actions` in re-frame context `re-ctx`."
   [re-ctx actions]
   (areduce actions idx ret re-ctx
            (let [action (aget actions idx)
-                 exec (or (aget action "exec") (aget action "xs-exec") identity)
+                 exec (or (aget action "exec") identity)
                  action-result (exec ret)]
              (if (map? action-result)
                action-result
                ret))))
+
+
+
+(cljs.pprint/pprint (macroexpand-1 '(areduce actions idx ret re-ctx
+                          (let [action (aget actions idx)
+                                exec (or (aget action "exec") (aget action "xs-exec") identity)
+                                action-result (exec ret)]
+                            (if (map? action-result)
+                              action-result
+                              ret)))))
 
 
 (defn- machine-actions->interceptors
@@ -23,7 +36,7 @@
 
    If several actions require same interceptor the interceptor will be included only once."
   [machine actions]
-  (let [interceptors (:interceptors machine)]
+  (let [interceptors (machine/machine->interceptors machine)]
     (last (areduce actions idx result [#{} []]
                    (-> (aget actions idx)
                        ((fn [action]
@@ -37,15 +50,6 @@
                              (into result-interceptors-vec action-interceptors-filtered)]))))))))
 
 
-; Re-frame event handler serving as the bridge between re-frame and XState
-(rf/reg-event-ctx
- ::xs-transition-event
- (fn [re-ctx]
-   (let [*interpreter (utils/re-ctx->*interpreter re-ctx)]
-     (protocols/-interpreter-transition! *interpreter re-ctx))))
-
-
-
 ;; Re-frame interceptor executing state transition actions
 (def exec-interceptor
   (rf/->interceptor
@@ -57,13 +61,17 @@
                (execute-transition-actions re-ctx actions)))))
 
 
-(declare interpreter-send!)
+;; Re-frame event handler serving as the bridge between re-frame and XState
+(rf/reg-event-ctx
+ ::xs-transition-event
+ (fn [re-ctx]
+   (let [*interpreter (utils/re-ctx->*interpreter re-ctx)]
+     (protocols/-interpreter-transition! *interpreter re-ctx))))
 
 
 (defn- interpreter-
   [machine-or-spec machine-options defer-events?]
-  (let [vid (str ::interpreter-id)
-        *interpreter (volatile! {:machine (if (instance? machine/Machine machine-or-spec)
+  (let [*interpreter (volatile! {:machine (if (satisfies? protocols/MachineProto machine-or-spec)
                                             machine-or-spec
                                             (machine/machine machine-or-spec machine-options))
                                  :state nil
@@ -111,7 +119,7 @@
                       :started? false)))
           this))
 
-      (interpreter-send-! [this event]
+      (-interpreter-send! [this event]
         (rf/dispatch [::xs-transition-event this event])
         ;; Always return self
         this)
@@ -120,7 +128,7 @@
 
       (-interpreter-transition! [this re-ctx]
         (let [machine (protocols/interpreter->machine this)
-              xs-machine (protocols/machine->xs-machine machine)
+              xs-machine (machine/machine->xs-machine machine)
               xs-event-type (utils/re-ctx->xs-event-type re-ctx)
               xs-current-state (protocols/interpreter->state this)
               xs-new-state (if xs-current-state
@@ -138,7 +146,7 @@
           (rf/enqueue re-ctx (conj interceptors exec-interceptor)))))))
 
 
-(defn interpreter
+(defn interpreter!
   "Creates XState based interpreter which uses re-frame facilities to send/receive and handle events"
 
   ([machine-or-spec & [machine-options & kvargs :as vargs]]
@@ -152,5 +160,5 @@
 (defn interpreter-send!
   "Sends an event to XState machine via re-frame facilities and initiates re-frame event processing using XState machine actions."
   [interpreter event & payload]
-  (protocols/interpreter-send-! interpreter
-                                 (into [event] payload)))
+  (protocols/-interpreter-send! interpreter
+                                (into [event] payload)))
