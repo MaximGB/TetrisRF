@@ -15,7 +15,7 @@
   (areduce actions idx ret re-ctx
            (let [action (aget actions idx)
                  exec (or (aget action "exec") identity)
-                 action-result (exec ret)]
+                 action-result (exec ret action)]
              (if (map? action-result)
                action-result
                ret))))

@@ -33,7 +33,8 @@
            (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
                  interpreter (interpreter! {:id :simple-machine
                                             :initial :ready
-                                            :states {:ready {:entry :in-ready
+                                            :states {:ready {:entry {:type :in-ready
+                                                                     :zzz 10}
                                                              :on {:toggle :running}}
                                                      :running {:entry :in-running}}}
 
@@ -93,8 +94,7 @@
                                             :states {:ready {:entry :in-ready}}}
 
                                            {:actions {:in-ready (ctx-action
-                                                                 (fn [re-ctx & rest]
-                                                                   (is (= (count rest) 0) "Ctx handler doesn't recieve event and args, just bare context.")
+                                                                 (fn [re-ctx]
                                                                    (let [event (rf/get-coeffect re-ctx :event)]
                                                                      (is event "Ctx-handler recieved `context`.")
                                                                      (rf/assoc-effect re-ctx ::async.put :done))))}})]

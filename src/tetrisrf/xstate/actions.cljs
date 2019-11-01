@@ -13,10 +13,11 @@
 
   ([interceptors handler]
    (with-meta
-     (fn [re-ctx]
+     (fn [re-ctx js-meta]
        (let [db (rf/get-coeffect re-ctx :db)
              xs-event (utils/re-ctx->xs-event re-ctx)
-             new-db (or (handler db xs-event) db)]
+             kv-meta (utils/js-meta->kv-argv js-meta)
+             new-db (or (apply handler (into [db xs-event] kv-meta)) db)]
          (-> re-ctx
              ;; Assoc into both since there might be other action handlers which
              ;; read from `db` coeffect
@@ -36,10 +37,11 @@
 
   ([interceptors handler]
    (with-meta
-     (fn [re-ctx]
+     (fn [re-ctx js-meta]
        (let [cofx (rf/get-coeffect re-ctx)
              xs-event (utils/re-ctx->xs-event re-ctx)
-             new-effects (handler cofx xs-event)]
+             kv-meta (utils/js-meta->kv-argv js-meta)
+             new-effects (apply handler (into [cofx xs-event] kv-meta))]
          (-> re-ctx
              ;; TODO: extract into util/merge-fx
              ((fn [re-ctx]
@@ -66,6 +68,8 @@
 
   ([interceptors ctx-action]
    (with-meta
-     (fn [re-ctx]
-       (ctx-action re-ctx))
+     (fn [re-ctx js-meta]
+       (let [xs-event (utils/re-ctx->xs-event re-ctx)
+             kv-meta (utils/js-meta->kv-argv js-meta)]
+         (apply ctx-action (into [re-ctx xs-event] kv-meta))))
      {utils/xs-interceptors interceptors})))
