@@ -34,16 +34,13 @@
 (def-guard-db test-machine :guard (fn [db] true))
 
 (def-action-db test-machine :db-action (fn [db]
-                                         (cljs.pprint/pprint 1)
                                          (update db ::test-machine inc)))
 
 (def-action-fx test-machine :fx-action (fn [cofx]
-                                         (cljs.pprint/pprint 2)
                                          {:db (update (:db cofx)
                                                       ::test-machine inc)}))
 
 (def-action-ctx test-machine :ctx-action (fn [re-ctx]
-                                           (cljs.pprint/pprint 3)
                                            (let [db (rf/get-coeffect re-ctx :db)
                                                  new-db (update db ::test-machine inc)]
                                              (rf/assoc-effect re-ctx :db new-db))))
