@@ -22,6 +22,15 @@
   (first (re-ctx->xs-event re-ctx)))
 
 
+(defn js-meta->kv-argv
+  "Transforms JS meta object into a vector of key value pairs."
+  [js-meta]
+  (->> (js->clj js-meta :keywordize-keys true)
+      (seq)
+      (flatten)
+      (into [])))
+
+
 (def xs-interceptors ::xs-interceptors)
 
 

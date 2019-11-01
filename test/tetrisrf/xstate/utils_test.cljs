@@ -7,7 +7,8 @@
                                            prepare-machine-options
                                            meta-actions->interceptors-map
                                            machine-config->actions-interceptors
-                                           machine-options->actions-interceptors]]))
+                                           machine-options->actions-interceptors
+                                           js-meta->kv-argv]]))
 
 
 (def test-machine-config {:id :test-2
@@ -102,3 +103,11 @@
                  [:actions :fn2] fn2}]
       (doseq [[path fn] paths]
         (is (identical? (gobject/getValueByKeys options-prepared (clj->js path)) fn) "Metaless correct function found")))))
+
+
+(deftest js-meta->kv-argv-test
+  (testing "Conversion of Javascript metadata object into vector of key/value pairs."
+    (let [meta #js {:a 1
+                    :b 2}
+          kv-argv (js-meta->kv-argv meta)]
+      (is (= kv-argv [:a 1 :b 2]) "Coversion correct"))))

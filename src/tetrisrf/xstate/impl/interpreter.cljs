@@ -21,16 +21,6 @@
                ret))))
 
 
-
-(cljs.pprint/pprint (macroexpand-1 '(areduce actions idx ret re-ctx
-                          (let [action (aget actions idx)
-                                exec (or (aget action "exec") (aget action "xs-exec") identity)
-                                action-result (exec ret)]
-                            (if (map? action-result)
-                              action-result
-                              ret)))))
-
-
 (defn- machine-actions->interceptors
   "Collects vector of unique action interceptors (#js [action]) -> [].
 
