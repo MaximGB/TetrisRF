@@ -58,7 +58,6 @@
                (rf/reg-event-db
                 ::check-result
                 (fn [db]
-                  #_(cljs.pprint/pprint db)
                   (casync/put! c (::test-machine db))
                   db))
 
