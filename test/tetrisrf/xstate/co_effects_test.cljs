@@ -31,7 +31,6 @@
                                                     {:actions {:in-ready (fx-action
                                                                           [cofx-interpreter-id]
                                                                           (fn [cofx]
-                                                                            (cljs.pprint/pprint cofx)
                                                                             (casync/put! c (cofx-interpreter-id cofx))))}}))]
              (casync/go
                (interpreter-start! interpreter)
