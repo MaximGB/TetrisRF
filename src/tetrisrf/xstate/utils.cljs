@@ -5,8 +5,8 @@
 (defn re-ctx->*interpreter
   "Gets interpreter instance from re-frame context's `:event` co-effect."
   [re-ctx]
-  (let [[_ vinterpreter] (rf/get-coeffect re-ctx :event)]
-    vinterpreter))
+  (let [[_ interpreter] (rf/get-coeffect re-ctx :event)]
+    interpreter))
 
 
 (defn re-ctx->xs-event

@@ -24,14 +24,14 @@
 
 (defprotocol InterpreterProto
   "XState based interpreter protocol which uses re-frame facilities to send/recieve and handle events"
+  (interpreter->id [this]
+    "Returns unique interpreter id.")
   (interpreter->machine ^Machine [this]
     "Returns currently interpreting machine.")
   (interpreter->state ^Object  [this]
     "Returns currently active state id.")
   (interpreter->started? ^boolean  [this]
     "Checks if interpreter has been started.")
-  (interpreter->defer-events? ^boolean [this]
-    "Checks if the interpreter is configured with defer-events? option.")
   (interpreter-start! ^InterpreterProto [this]
     "Starts machine interpretation. Registers re-frame event handlers to recieve events of the machine.")
   (interpreter-stop! ^InterpreterProto [this]
@@ -46,4 +46,4 @@
   (-interpreter-transition! [this re-ctx]
     "Does the state chart transition.
 
-     Returns re-frame context"))
+     Returns re-frame context."))

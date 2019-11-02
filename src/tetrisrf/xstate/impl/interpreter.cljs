@@ -60,13 +60,9 @@
 
 
 (defn- interpreter-
-  [machine-or-spec machine-options defer-events?]
-  (let [*interpreter (volatile! {:machine (if (satisfies? protocols/MachineProto machine-or-spec)
-                                            machine-or-spec
-                                            (machine/machine machine-or-spec machine-options))
-                                 :state nil
-                                 :started? false
-                                 :defer-events? defer-events?})]
+  [id machine]
+  (let [*interpreter (volatile! {:state nil
+                                 :started? false})]
     (reify
       IDeref
 
@@ -74,17 +70,17 @@
 
       protocols/InterpreterProto
 
+      (interpreter->id [this]
+        id)
+
       (interpreter->machine [this]
-        (:machine @*interpreter))
+        machine)
 
       (interpreter->state [this]
         (:state @*interpreter))
 
       (interpreter->started? [this]
         (:started? @*interpreter))
-
-      (interpreter->defer-events? [this]
-        (:defer-events? @*interpreter))
 
       (interpreter-start! [this]
         (let [started? (protocols/interpreter->started? this)]
@@ -139,12 +135,11 @@
 (defn interpreter!
   "Creates XState based interpreter which uses re-frame facilities to send/receive and handle events"
 
-  ([machine-or-spec & [machine-options & kvargs :as vargs]]
-   (if (keyword? machine-options)
-     (let [[& {:keys [defer-events?] :or {defer-events? false}}] vargs]
-       (interpreter- machine-or-spec {} defer-events?))
-     (let [[& {:keys [defer-events?] :or {defer-events? false}}] kvargs]
-       (interpreter- machine-or-spec machine-options defer-events?)))))
+  ([machine]
+   (interpreter! (gensym ::instance) machine))
+
+  ([id machine]
+   (interpreter- id machine)))
 
 
 (defn interpreter-send!

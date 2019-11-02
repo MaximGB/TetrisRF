@@ -29,7 +29,7 @@
                                                   :entry :at-running}}}
                  machine-opts {:actions {:at-running #(casync/put! c :at-running)
                                          :at-ready #(casync/put! c :at-ready)}}
-                 interpreter (interpreter! machine-spec machine-opts)]
+                 interpreter (interpreter! (machine machine-spec machine-opts))]
              (casync/go
                (interpreter-start! interpreter)
                (is (= :at-ready (casync/<! c)) "Machine initialized at `ready` state")
@@ -44,14 +44,14 @@
   (testing "Multiple actions execution and their order of execution")
   (async done
          (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
-               interpreter (interpreter! {:id :simple-machine
-                                          :initial :ready
-                                          :states {:ready {:on {:toggle {:target :running
-                                                                         :actions [:one :two :three]}}}
-                                                   :running {}}}
-                                         {:actions {:one #(casync/put! c :one)
-                                                    :two #(casync/put! c :two)
-                                                    :three #(casync/put! c :three)}})]
+               interpreter (interpreter! (machine {:id :simple-machine
+                                                   :initial :ready
+                                                   :states {:ready {:on {:toggle {:target :running
+                                                                                  :actions [:one :two :three]}}}
+                                                            :running {}}}
+                                                  {:actions {:one #(casync/put! c :one)
+                                                             :two #(casync/put! c :two)
+                                                             :three #(casync/put! c :three)}}))]
            (casync/go
              (interpreter-start! interpreter)
              (interpreter-send! interpreter :toggle)

@@ -43,7 +43,7 @@
              kv-meta (utils/js-meta->kv-argv js-meta)
              new-effects (apply handler (into [cofx xs-event] kv-meta))]
          (-> re-ctx
-             ;; TODO: extract into util/merge-fx
+             ;; TODO: maybe extract into util/merge-fx
              ((fn [re-ctx]
                 (reduce (fn [re-ctx [effect-key effect-val]]
                           (rf/assoc-effect re-ctx effect-key effect-val))
