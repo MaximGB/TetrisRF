@@ -3,6 +3,7 @@
   :auto-testing true}
 {:main tetrisrf.core
  :infer-externs true
+ :source-map true
  :npm-deps false
  :foreign-libs [{:file "dist/index_bundle.js"
                  :provides ["xstate"]
