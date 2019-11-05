@@ -24,15 +24,15 @@
 
 (defprotocol InterpreterProto
   "XState based interpreter protocol which uses re-frame facilities to send/recieve and handle events"
-  (interpreter->id [this]
-    "Returns unique interpreter id.")
+  (interpreter->path [this]
+    "Returns interpreter data path in app-db.")
   (interpreter->machine ^Machine [this]
     "Returns currently interpreting machine.")
   (interpreter->state ^Object  [this]
     "Returns currently active state id.")
   (interpreter->started? ^boolean  [this]
     "Checks if interpreter has been started.")
-  (interpreter-start! ^InterpreterProto [this]
+  (-interpreter-start! ^InterpreterProto [this event-data]
     "Starts machine interpretation. Registers re-frame event handlers to recieve events of the machine.")
   (interpreter-stop! ^InterpreterProto [this]
     "Stops machine interpretation. Un-registers re-frame event handlers registered at (start) call.")
@@ -47,3 +47,16 @@
     "Does the state chart transition.
 
      Returns re-frame context."))
+
+
+(defn interpreter-start!
+  "Starts interpreter optionally passing addition payload for `::xs-init` event."
+  [interpreter & init-payload]
+  (-interpreter-start! interpreter init-payload))
+
+
+(defn interpreter-send!
+  "Sends an event to XState machine via re-frame facilities and initiates re-frame event processing using XState machine actions."
+  [interpreter event & payload]
+  (-interpreter-send! interpreter
+                      (into [event] payload)))

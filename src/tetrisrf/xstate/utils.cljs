@@ -1,6 +1,13 @@
 (ns tetrisrf.xstate.utils
   (:require [re-frame.core :as rf]
-            [com.rpl.specter :as specter]))
+            [com.rpl.specter :as specter]
+            [tetrisrf.xstate.protocols :as protocols]))
+
+(defn arglist?
+  "Opinionatedly checks if a sequence can be used as arglist"
+  [s]
+  (and s (seqable? s) (not (map? s))))
+
 
 (defn re-ctx->*interpreter
   "Gets interpreter instance from re-frame context's `:event` co-effect."
@@ -20,6 +27,13 @@
   "Gets `xs-event` type from re-frame context's `:event` co-effect."
   [re-ctx]
   (first (re-ctx->xs-event re-ctx)))
+
+
+(defn cofx->interpreter
+  "Gets interpreter instance from re-frame `:event` co-effect."
+  [cofx]
+  (let [[_ interpreter] (:event cofx)]
+    interpreter))
 
 
 (defn js-meta->kv-argv
@@ -98,8 +112,6 @@
           actions))
 
 
-(fn? (.-alert js/window))
-
 (defn machine-config->actions-interceptors
   "Extracts interceptros metadata from actions given in machine configuration.
 
@@ -118,9 +130,3 @@
   [options & {:keys [bare?] :or {bare? true}}]
   (meta-actions->interceptors-map (specter/select MACHINE-OPTIONS-ACTIONS options)
                                   :bare? bare?))
-
-
-(defn normalize-machine-options
-  "Normalizes machine `options` from guards/actions mixed definition to separated one, if needed."
-  [options]
-  options)

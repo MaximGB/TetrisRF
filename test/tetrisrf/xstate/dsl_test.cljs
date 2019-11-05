@@ -66,6 +66,6 @@
 
                (rf/dispatch [::check-result])
 
-               (is (= (casync/<! c) 3) "All actions were called.")
+               (is (= (casync/<! c) 3) "All actions have been called.")
 
                (done))))))

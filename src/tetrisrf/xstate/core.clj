@@ -63,3 +63,6 @@
 
   [var-name id guard-fn]
    `(machine-add-guard! ~var-name ~id (ctx-guard ~guard-fn)))
+
+
+;; TODO: add isolated versions of those guards/actions

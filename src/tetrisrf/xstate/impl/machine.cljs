@@ -4,8 +4,6 @@
             [xstate :as xs]))
 
 
-(def machine->config protocols/machine->config)
-(def machine->options protocols/machine->options)
 (def machine->interceptors (memoize protocols/-machine->interceptors))
 (def machine->xs-machine (memoize protocols/-machine->xs-machine))
 
@@ -34,13 +32,13 @@
     (:options this))
 
   (-machine->interceptors [this]
-    (let [config (machine->config this)
-          options (machine->options this)]
+    (let [config (protocols/machine->config this)
+          options (protocols/machine->options this)]
       (make-machine-interceptors config options)))
 
   (-machine->xs-machine [this]
-    (let [config (machine->config this)
-          options (machine->options this)]
+    (let [config (protocols/machine->config this)
+          options (protocols/machine->options this)]
       (make-machine-xs-machine config options))))
 
 

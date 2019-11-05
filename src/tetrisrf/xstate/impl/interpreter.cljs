@@ -6,9 +6,6 @@
             [xstate :as xs]))
 
 
-(declare interpreter-send!)
-
-
 (defn- execute-transition-actions
   "Executes given `actions` in re-frame context `re-ctx`."
   [re-ctx actions]
@@ -60,7 +57,7 @@
 
 
 (defn- interpreter-
-  [id machine]
+  [path machine]
   (let [*interpreter (volatile! {:state nil
                                  :started? false})]
     (reify
@@ -70,8 +67,8 @@
 
       protocols/InterpreterProto
 
-      (interpreter->id [this]
-        id)
+      (interpreter->path [this]
+        path)
 
       (interpreter->machine [this]
         machine)
@@ -82,7 +79,7 @@
       (interpreter->started? [this]
         (:started? @*interpreter))
 
-      (interpreter-start! [this]
+      (-interpreter-start! [this init-payload]
         (let [started? (protocols/interpreter->started? this)]
           (if-not started?
             ;; Starting
@@ -91,7 +88,7 @@
                       assoc
                       :started? true)
               ;; Dispatching self-initialization event to transit to machine initial state
-              (interpreter-send! this ::xs-init)))
+              (protocols/-interpreter-send! this (into [::xs-init] init-payload))))
           ;; Always return self
           this))
 
@@ -138,12 +135,8 @@
   ([machine]
    (interpreter! (gensym ::instance) machine))
 
-  ([id machine]
-   (interpreter- id machine)))
-
-
-(defn interpreter-send!
-  "Sends an event to XState machine via re-frame facilities and initiates re-frame event processing using XState machine actions."
-  [interpreter event & payload]
-  (protocols/-interpreter-send! interpreter
-                                (into [event] payload)))
+  ([path machine]
+   (interpreter- (if (seqable? path)
+                   path
+                   [path])
+                 machine)))

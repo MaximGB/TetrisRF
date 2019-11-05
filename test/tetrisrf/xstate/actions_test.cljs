@@ -5,10 +5,12 @@
                                   :refer [interpreter!
                                           interpreter-start!
                                           interpreter-send!
+                                          interpreter->started?
                                           machine
                                           db-action
                                           fx-action
-                                          ctx-action]]
+                                          ctx-action
+                                          idb-action]]
             [re-frame.core :as rf]))
 
 
@@ -235,4 +237,35 @@
                (interpreter-start! interpreter)
                (interpreter-send! interpreter :toggle)
                (is (= (casync/<! c) [1 2 3]) "All coeffects are injected")
+               (done))))))
+
+
+(deftest idb-action-test
+  (testing "IDB action isolation"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :simple-machine
+                             :initial :ready
+                             :states {:ready {:entry :in-ready}}}
+
+                            {:actions {:in-ready (idb-action
+                                                  (fn [db [_ value]]
+                                                    (assoc db :val value)))}})
+                 interpreter-1 (interpreter! ::i1 m)
+                 interpreter-2 (interpreter! ::i2 m)]
+
+             (rf/reg-event-db
+              ::idb-action-test
+              (fn [db]
+                (casync/put! c db)
+                db))
+
+             (casync/go
+               (interpreter-start! interpreter-1 1)
+               (interpreter-start! interpreter-2 2)
+               (rf/dispatch [::idb-action-test])
+               (is (= (casync/<! c)
+                      {::i1 {:val 1}
+                       ::i2 {:val 2}})
+                   "Data isolation works correctly")
                (done))))))
