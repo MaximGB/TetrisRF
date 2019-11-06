@@ -48,6 +48,7 @@
 (def ctx-guard guards/ctx-guard)
 
 (def reg-isub subscriptions/reg-isub)
+(def isubscribe subscriptions/isubscribe)
 
 (def register-interpreter! registry/register-interpreter!)
 (def unregister-interpreter! registry/unregister-interpreter!)

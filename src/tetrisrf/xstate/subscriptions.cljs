@@ -10,6 +10,12 @@
      (get-in db path))))
 
 
+(defn isubscribe
+  "Creates a reaction to changes in `interpreter` path isolated part of the app db."
+  [interpreter]
+  (rf/subscribe [::interpreter-db interpreter]))
+
+
 (defn reg-isub
   "Creates subscription to isolated by interpreter path part of the application database.
 
@@ -22,5 +28,5 @@
   (rf/reg-sub
    id
    (fn [[_ interpreter]]
-     (rf/subscribe [::interpreter-db interpreter]))
+     (isubscribe interpreter))
    computation-fn))

@@ -130,3 +130,36 @@
   [options & {:keys [bare?] :or {bare? true}}]
   (meta-actions->interceptors-map (specter/select MACHINE-OPTIONS-ACTIONS options)
                                   :bare? bare?))
+
+
+(defn with-re-ctx-db-isolated
+  "Calls `inner-fn` having isolated re-frame's context :db co-effect/effect using provided `path`.
+
+   `inner-fn` is called as (inner-fn new-re-ctx & inner-args)."
+  [re-ctx path inner-fn & inner-args]
+  (let [;; Getting un-isolated db
+        udb (rf/get-coeffect re-ctx :db)
+        ;; Getting isolated db part
+        idb (get-in udb path)
+        ;; Changing :db coeffect/effect to hold isolated db
+        ictx (-> re-ctx
+                 (rf/assoc-coeffect #_re-ctx :db idb)
+                 (rf/assoc-effect #_re-ctx :db idb))
+        ;; Calling handler, recieving new context with isolated :db coeffect and possible db changes in :db effect
+        new-ictx (apply inner-fn ictx inner-args) ;; <! - HANDLER CALL
+        ;; Getting new isolated db part
+        new-idb (rf/get-effect new-ictx :db)]
+    (if (not= new-idb idb)
+      ;; If handler changed :db effect then removing isolation and propagating changes to both co-effects and effects
+      (let [new-udb (assoc-in udb path new-idb)
+            new-ctx (-> new-ictx
+                        (rf/assoc-effect #_new-ictx :db new-udb)
+                        ;; Restoring back to co-effect because we are in environment with multiple event handlers
+                        (rf/assoc-coeffect #_new-ictx :db new-udb))]
+        new-ctx)
+      ;; Else if handler haven't manipulated isolated db then just removing isolation in both co-effects and effects
+      (let [new-ctx (-> new-ictx
+                        (rf/assoc-effect #_new-ictx :db udb)
+                        ;; Restoring back to co-effect because we are in environment with multiple event handlers
+                        (rf/assoc-coeffect #_new-ictx :db udb))]
+        new-ctx))))

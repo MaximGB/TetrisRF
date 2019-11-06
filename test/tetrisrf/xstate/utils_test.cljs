@@ -8,7 +8,8 @@
                                            meta-actions->interceptors-map
                                            machine-config->actions-interceptors
                                            machine-options->actions-interceptors
-                                           js-meta->kv-argv]]))
+                                           js-meta->kv-argv
+                                           with-re-ctx-db-isolated]]))
 
 
 (def test-machine-config {:id :test-2
@@ -111,3 +112,19 @@
                     :b 2}
           kv-argv (js-meta->kv-argv meta)]
       (is (= kv-argv [:a 1 :b 2]) "Coversion correct"))))
+
+
+(deftest with-re-ctx-db-isolated-test
+  (testing "Re-frame context :db isolation utility"
+    (let [path-1 [:a :b :c]
+          path-2 [:a :b :d]
+          db {:z 1}
+          ctx {:co-effects {:db db}}
+          inner-fn (fn [re-ctx v]
+                      (assoc-in re-ctx [:effects :db :v] v))
+          new-ctx (-> ctx
+                      (with-re-ctx-db-isolated path-1 inner-fn 1)
+                      (with-re-ctx-db-isolated path-2 inner-fn 2))]
+      (is (= (get-in new-ctx [:effects :db])
+             {:a {:b {:c {:v 1}
+                      :d {:v 2}}}})))))

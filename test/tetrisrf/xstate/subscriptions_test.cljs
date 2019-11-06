@@ -5,6 +5,7 @@
             [tetrisrf.xstate.core :refer [machine
                                           interpreter!
                                           reg-isub
+                                          isubscribe
                                           idb-action]]))
 
 (def rf-checkpoint (volatile! nil))
@@ -45,5 +46,7 @@
                ;; Waiting for dispatch to be handled
                (rf/dispatch [::next])
                (casync/<! c)
-               (is (= @(rf/subscribe [::my-sub i]) ::my-value) "Subscription returned isolated app db part")
+               ;; Checking
+               (is (= @(rf/subscribe [::my-sub i]) ::my-value) "Subscription returned isolated app db part 1")
+               (is (= @(isubscribe i) ::my-value) "Subscription returned isolated app db part 2")
                (done))))))
