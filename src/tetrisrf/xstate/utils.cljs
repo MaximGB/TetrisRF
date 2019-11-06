@@ -132,8 +132,25 @@
                                   :bare? bare?))
 
 
+(defn call-with-re-ctx-db-isolated
+  "Calls `inner-fn` having isolated re-frame's context :db co-effect/effect using provided `path`, returns inner-fn call result.
+
+   `inner-fn` is called as (inner-fn new-re-ctx & inner-args)."
+  [re-ctx path inner-fn & inner-args]
+  (let [;; Getting un-isolated db
+        udb (rf/get-coeffect re-ctx :db)
+        ;; Getting isolated db part
+        idb (get-in udb path)
+        ;; Changing :db coeffect/effect to hold isolated db
+        ictx (-> re-ctx
+                 (rf/assoc-coeffect #_re-ctx :db idb)
+                 (rf/assoc-effect #_re-ctx :db idb))]
+    ;; Calling handler, recieving new context with isolated :db coeffect and possible db changes in :db effect
+    (apply inner-fn ictx inner-args))) ;; <! - HANDLER CALL
+
+
 (defn with-re-ctx-db-isolated
-  "Calls `inner-fn` having isolated re-frame's context :db co-effect/effect using provided `path`.
+  "Calls `inner-fn` having isolated re-frame's context :db co-effect/effect using provided `path`, returns updated context with :db unisolated.
 
    `inner-fn` is called as (inner-fn new-re-ctx & inner-args)."
   [re-ctx path inner-fn & inner-args]

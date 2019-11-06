@@ -41,11 +41,16 @@
 (def fx-action actions/fx-action)
 (def ctx-action actions/ctx-action)
 (def idb-action actions/idb-action)
+(def ifx-action actions/ifx-action)
+(def ictx-action actions/ictx-action)
 
 (def ev-guard guards/ev-guard)
 (def db-guard guards/db-guard)
 (def fx-guard guards/fx-guard)
 (def ctx-guard guards/ctx-guard)
+(def idb-guard guards/idb-guard)
+(def ifx-guard guards/ifx-guard)
+(def ictx-guard guards/ictx-guard)
 
 (def reg-isub subscriptions/reg-isub)
 (def isubscribe subscriptions/isubscribe)

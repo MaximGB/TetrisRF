@@ -9,7 +9,10 @@
                                           ev-guard
                                           db-guard
                                           fx-guard
-                                          ctx-guard]]
+                                          ctx-guard
+                                          idb-guard
+                                          ifx-guard
+                                          ictx-guard]]
             [re-frame.core :as rf]))
 
 
@@ -79,6 +82,36 @@
                (done))))))
 
 
+(deftest idb-guard-test
+  (testing "Isolated DB guard"
+    (async done
+           (let [c (casync/timeout 100)
+                 interpreter (interpreter! [::a ::b] (machine {:id :simple-machine
+                                                               :initial :ready
+                                                               :states {:ready {:on {:toggle {:target :running
+                                                                                              :cond :can-run?}}}
+                                                                        :running {:entry :done}}}
+
+                                                              {:actions {:done #(casync/put! c :done)}
+                                                               :guards {:can-run? (idb-guard
+                                                                                   (fn [db [event arg]]
+                                                                                     (is (= event :toggle) "DB guard has recieved correct event.")
+                                                                                     (is (= arg :arg) "DB guard has recieved correct event payload.")
+                                                                                     (::can-run? db)))}}))]
+             (rf/reg-event-db
+              ::db-guard-test-setup
+              (fn [db]
+                (assoc-in db [::a ::b ::can-run?] true)))
+
+             (rf/dispatch-sync [::db-guard-test-setup])
+
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :toggle :arg)
+               (is (= (casync/<! c) :done) "Isolated Db guard passed truthy value")
+               (done))))))
+
+
 (deftest fx-guard-test
   (testing "FX guard")
     (async done
@@ -107,6 +140,37 @@
                (interpreter-start! interpreter)
                (interpreter-send! interpreter :toggle :arg)
                (is (= (casync/<! c) :done) "Fx guard passed truthy value")
+               (done)))))
+
+
+(deftest ifx-guard-test
+  (testing "Isolated FX guard")
+    (async done
+           (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
+                 interpreter (interpreter! [::a ::b] (machine {:id :simple-machine
+                                                               :initial :ready
+                                                               :states {:ready {:on {:toggle {:target :running
+                                                                                              :cond :can-run?}}}
+                                                                        :running {:entry :done}}}
+
+                                                              {:actions {:done #(casync/put! c :done)}
+                                                               :guards {:can-run? (ifx-guard
+                                                                                   (fn [cofx [event arg]]
+                                                                                     (is (= event :toggle) "Fx-guard has recieved correct event.")
+                                                                                     (is (= arg :arg) "Fx-guard has recieved correct event payload.")
+                                                                                     (is (:event cofx) "Fx-handler recieved `cofx` map")
+                                                                                     (::can-run? (:db cofx))))}}))]
+             (rf/reg-event-db
+              ::db-guard-test-setup
+              (fn [db]
+                (assoc-in db [::a ::b ::can-run?] true)))
+
+             (rf/dispatch-sync [::db-guard-test-setup])
+
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :toggle :arg)
+               (is (= (casync/<! c) :done) "Isolated Fx guard passed truthy value")
                (done)))))
 
 
@@ -139,6 +203,35 @@
                (done)))))
 
 
+(deftest ictx-guard-test
+  (testing "Isolated CTX guard")
+    (async done
+           (let [c (casync/timeout 100) ;; If something goes wrong we shouldn't wait too long
+                 interpreter (interpreter! [::a ::b] (machine {:id :simple-machine
+                                                               :initial :ready
+                                                               :states {:ready {:on {:toggle {:target :running
+                                                                                              :cond :can-run?}}}
+                                                                        :running {:entry :done}}}
+
+                                                              {:actions {:done #(casync/put! c :done)}
+                                                               :guards {:can-run? (ictx-guard
+                                                                                   (fn [re-ctx]
+                                                                                     (let [db (rf/get-coeffect re-ctx :db)]
+                                                                                       (::can-run? db))))}}))]
+             (rf/reg-event-db
+              ::db-guard-test-setup
+              (fn [db]
+                (assoc-in db [::a ::b ::can-run?] true)))
+
+             (rf/dispatch-sync [::db-guard-test-setup])
+
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :toggle :arg)
+               (is (= (casync/<! c) :done) "Isolated CTX guard passed truthy value")
+               (done)))))
+
+
 (deftest guards-metadata-test
   (testing "Guards should recieve metadata as keyword arguments"
     (async done
@@ -154,9 +247,19 @@
                                                               :two {:on {:next {:target :three
                                                                                 :cond {:type :fx-guard
                                                                                        :meta :three}}}}
-                                                              :three {:on {:next {:target :ready
+                                                              :three {:on {:next {:target :four
                                                                                   :cond {:type :ctx-guard
-                                                                                         :meta :four}}}}}}
+                                                                                         :meta :four}}}}
+                                                              :four {:on {:next {:target :five
+                                                                                 :cond {:type :idb-guard
+                                                                                        :meta :five}}}}
+                                                              :five {:on {:next {:target :six
+                                                                                 :cond {:type :ifx-guard
+                                                                                        :meta :six}}}}
+                                                              :six {:on {:next {:target :seven
+                                                                                :cond {:type :ictx-guard
+                                                                                       :meta :seven}}}}
+                                                              :seven {}}}
 
                                                     {:guards {:ev-guard (ev-guard
                                                                          (fn [_ & {:keys [meta]}]
@@ -173,7 +276,19 @@
                                                               :ctx-guard (ctx-guard
                                                                           (fn [_ _ & {:keys [meta]}]
                                                                             (casync/put! c meta)
-                                                                            true))}}))]
+                                                                            true))
+                                                              :idb-guard (idb-guard
+                                                                          (fn [_ _ & {:keys [meta]}]
+                                                                            (casync/put! c meta)
+                                                                            true))
+                                                              :ifx-guard (ifx-guard
+                                                                          (fn [_ _ & {:keys [meta]}]
+                                                                            (casync/put! c meta)
+                                                                            true))
+                                                              :ictx-guard (ictx-guard
+                                                                           (fn [_ _ & {:keys [meta]}]
+                                                                             (casync/put! c meta)
+                                                                             true))}}))]
              (casync/go
                (interpreter-start! interpreter)
                (interpreter-send! interpreter :next)
@@ -184,4 +299,10 @@
                (is (= (casync/<! c) "three") "FX guard recieved correct meta")
                (interpreter-send! interpreter :next)
                (is (= (casync/<! c) "four") "CTX guard recieved correct meta")
+               (interpreter-send! interpreter :next)
+               (is (= (casync/<! c) "five") "IDB guard recieved correct meta")
+               (interpreter-send! interpreter :next)
+               (is (= (casync/<! c) "six") "IFX guard recieved correct meta")
+               (interpreter-send! interpreter :next)
+               (is (= (casync/<! c) "seven") "ICTX guard recieved correct meta")
                (done))))))

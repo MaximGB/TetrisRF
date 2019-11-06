@@ -40,7 +40,7 @@
   In contrast to `(db-action)` this function isolates DB using interpreter path into isolated DB section.
   `handler` is a function similar to re-frame's reg-event-db handler (db event-vector & meta) -> db.
 
-  The function also adds ::co-effects/instance co-effect to required interceptors list and holds required interceptors in it's metadata."
+  The function also contains required interceptors in it's metadata."
 
   ([handler]
    (idb-action [] handler))
@@ -49,13 +49,13 @@
    (let [db-handler (db-action->re-ctx-handler handler)]
      (with-meta
        (fn [re-ctx js-meta]
-         (let [interpreter (rf/get-coeffect re-ctx ::co-effects/instance)
+         (let [interpreter (utils/re-ctx->*interpreter re-ctx)
                interpreter-path (protocols/interpreter->path interpreter)]
            (utils/with-re-ctx-db-isolated re-ctx
                                           interpreter-path
                                           db-handler
                                           js-meta)))
-       {utils/xs-interceptors (into [::co-effects/instance] interceptors)}))))
+       {utils/xs-interceptors interceptors}))))
 
 
 
@@ -105,7 +105,7 @@
   In contrast to `(fx-action)` this function isolates DB using interpreter path into isolated DB section.
   `handler` is function similar to re-frame's reg-event-fx handler (cofx-map event-vector & meta) -> fx-map.
 
-  The function also adds ::co-effects/instance co-effect to required interceptors list and holds required interceptors in it's metadata."
+  The function also contains required interceptors in it's metadata."
   ([handler]
    (ifx-action [] handler))
 
@@ -113,13 +113,13 @@
    (let [fx-handler (fx-action->re-ctx-handler handler)]
      (with-meta
        (fn [re-ctx js-meta]
-         (let [interpreter (rf/get-coeffect re-ctx ::co-effects/instance)
+         (let [interpreter (utils/re-ctx->*interpreter re-ctx)
                interpreter-path (protocols/interpreter->path interpreter)]
            (utils/with-re-ctx-db-isolated re-ctx
                                           interpreter-path
                                           fx-handler
                                           js-meta)))
-       {utils/xs-interceptors (into [::co-effects/instance] interceptors)}))))
+       {utils/xs-interceptors interceptors}))))
 
 
 (defn- ctx-action->re-ctx-handler
@@ -152,7 +152,7 @@
   In contrast to `(ctx-action)` this function isolates DB using interpreter path into isolated DB section.
    `handler` is function similar to re-frame's reg-event-ctx handler (re-ctx event-vector & meta) -> re-ctx.
 
-  The function also adds ::co-effects/instance co-effect to required interceptors list and holds required interceptors in it's metadata."
+  The function also contains required interceptors in it's metadata."
 
   ([handler]
    (ictx-action [] handler))
@@ -160,10 +160,10 @@
    (let [ctx-handler (ctx-action->re-ctx-handler handler)]
      (with-meta
        (fn [re-ctx js-meta]
-         (let [interpreter (rf/get-coeffect re-ctx ::co-effects/instance)
+         (let [interpreter (utils/re-ctx->*interpreter re-ctx)
                interpreter-path (protocols/interpreter->path interpreter)]
            (utils/with-re-ctx-db-isolated re-ctx
                                           interpreter-path
                                           ctx-handler
                                           js-meta)))
-       {utils/xs-interceptors (into [::co-effects/instance] interceptors)}))))
+       {utils/xs-interceptors interceptors}))))

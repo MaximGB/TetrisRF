@@ -9,6 +9,7 @@
                                            machine-config->actions-interceptors
                                            machine-options->actions-interceptors
                                            js-meta->kv-argv
+                                           call-with-re-ctx-db-isolated
                                            with-re-ctx-db-isolated]]))
 
 
@@ -114,12 +115,22 @@
       (is (= kv-argv [:a 1 :b 2]) "Coversion correct"))))
 
 
+(deftest call-with-re-ctx-db-isolated-test
+  (testing "Calling with re-frame context :db isolated"
+    (let [path [:a :b :c]
+          db {:a {:b {:c ::my-val}}}
+          ctx {:coeffects {:db db}}
+          inner-fn (fn [re-ctx v]
+                     (= (get-in re-ctx [:coeffects :db]) v))]
+      (is (call-with-re-ctx-db-isolated ctx path inner-fn ::my-val) "Call returns true correctly"))))
+
+
 (deftest with-re-ctx-db-isolated-test
   (testing "Re-frame context :db isolation utility"
     (let [path-1 [:a :b :c]
           path-2 [:a :b :d]
           db {:z 1}
-          ctx {:co-effects {:db db}}
+          ctx {:coeffects {:db db}}
           inner-fn (fn [re-ctx v]
                       (assoc-in re-ctx [:effects :db :v] v))
           new-ctx (-> ctx
@@ -127,4 +138,5 @@
                       (with-re-ctx-db-isolated path-2 inner-fn 2))]
       (is (= (get-in new-ctx [:effects :db])
              {:a {:b {:c {:v 1}
-                      :d {:v 2}}}})))))
+                      :d {:v 2}}}
+              :z 1})))))
