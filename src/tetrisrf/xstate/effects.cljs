@@ -20,9 +20,15 @@
                                   (utils/arglist? payload) payload
                                   :else [payload])))
 
+
 (defn- normalized-interpreter-stop!
   [id]
   (protocols/interpreter-stop! (normalize-interpreter id)))
+
+
+(defn- normalized-interpreter-send!
+  [id event]
+  (protocols/-interpreter-send! (normalize-interpreter id) event))
 
 
 ;; Registers interpreter instance in the registry
@@ -55,7 +61,7 @@
  (fn [id-and-payload]
    (cond
      ;; Map is used to start several interpreters
-     ;; keys are ids
+     ;; keys are ids or interpreter instances
      ;; values are payload
      (map? id-and-payload)
      (doseq [[id payload] (seq id-and-payload)]
@@ -77,7 +83,7 @@
  (fn [ids]
    (cond
      ;; Map might be used to stop several interpreters
-     ;; keys are ids
+     ;; keys are ids or interpreter instances
      ;; values are ignored
      (map? ids)
      (doseq [[id _] (seq ids)]
@@ -96,8 +102,24 @@
 ;; Sends an event to an interpreter
 (rf/reg-fx
  ::send
- (fn [[id & event-and-payload]]
-   ;; sequence of ids + payload
-   ;; single id + payload
-   (protocols/-interpreter-send! (normalize-interpreter id)
-                                 event-and-payload)))
+ (fn [id-and-event]
+   (cond
+     ;; Map might be used to send to several interpeters
+     ;; keys are interpreter ids or interpreter instances
+     ;; values are:
+     ;;  - none-sequential - an event
+     ;;  - sequential - [event & payload]
+     (map? id-and-event)
+     (doseq [[id event] (seq id-and-event)]
+       (normalized-interpreter-send! id (if (seqable? event)
+                                          event
+                                          [event])))
+
+     ;; Non-map seqable is an [id, event & payload]
+     (seqable? id-and-event)
+     (let [[id & event] id-and-event]
+       (normalized-interpreter-send! id event))
+
+     ;; Everything else is an error
+     :else
+     (throw (js/Error. "Don't know how to execute given send effect!")))))

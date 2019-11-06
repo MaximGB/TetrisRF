@@ -327,8 +327,90 @@
 
 
 (deftest single-interpreter-send-test
-  (testing "Single interpreter send"))
+  (testing "Single interpreter send"
+    (async done
+           (let [c (casync/timeout 100)
+                 slave (machine {:id :slave-machine
+                                 :initial :ready
+                                 :states {:ready {:on {:report {:actions :put-sent}}}}}
+
+                                {:actions {:put-sent (fx-action
+                                                        (fn [cofx [event & payload]]
+                                                          (casync/put! c [event payload])))}})
+
+                 master (machine {:id :master-machine
+                                  :initial :ready
+                                  :states {:ready {:entry :spawn-start-register
+                                                   :on {:send-event {:actions :send-event}
+                                                        :send-event-payload {:actions :send-event-payload}}}}}
+
+                                 {:actions {:spawn-start-register (fx-action
+                                                                   [(rf/inject-cofx cofx-spawn slave)]
+                                                                   (fn [cofx]
+                                                                     (let [slave (cofx-spawn cofx)]
+                                                                       {fx-start slave
+                                                                        fx-register [::slave slave]})))
+
+                                            :send-event (fx-action
+                                                         (fn [cofx]
+                                                           {fx-send [::slave :report]}))
+
+                                            :send-event-payload (fx-action
+                                                                 (fn [cofx [event & payload]]
+                                                                   {fx-send (into [::slave :report] payload)}))}})
+                 interpreter (interpreter! master)]
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :send-event)
+               (is (= (casync/<! c) [:report nil]) "Slave recieved an event w/o payload")
+               (interpreter-send! interpreter :send-event-payload 1 2 3)
+               (is (= (casync/<! c) [:report [1 2 3]]) "Slave recieved an event with payload")
+               (done))))))
 
 
 (deftest multiple-interpreters-send-test
-  (testing "Multiple interpreters send"))
+  (testing "Multiple interpreters send"
+    (async done
+           (let [c (casync/timeout 100)
+                 slave (machine {:id :slave-machine
+                                 :initial :ready
+                                 :states {:ready {:on {:report {:actions :put-sent}}}}}
+
+                                {:actions {:put-sent (fx-action
+                                                      (fn [cofx [event & payload]]
+                                                        (casync/put! c [event payload])))}})
+
+                 master (machine {:id :master-machine
+                                  :initial :ready
+                                  :states {:ready {:entry :spawn-start-register
+                                                   :on {:send-event {:actions :send-event}
+                                                        :send-event-payload {:actions :send-event-payload}}}}}
+
+                                 {:actions {:spawn-start-register (fx-action
+                                                                   [(rf/inject-cofx cofx-spawn [slave slave])]
+                                                                   (fn [cofx]
+                                                                     (let [[slave-1 slave-2] (cofx-spawn cofx)]
+                                                                       {fx-start {slave-1 nil
+                                                                                  slave-2 nil}
+                                                                        fx-register {::slave-1 slave-1
+                                                                                     ::slave-2 slave-2}})))
+
+                                            :send-event (fx-action
+                                                         (fn [cofx]
+                                                           {fx-send {::slave-1 :report
+                                                                     ::slave-2 :report}}))
+
+                                            :send-event-payload (fx-action
+                                                                 (fn [cofx [event & payload]]
+                                                                   {fx-send {::slave-1 (into [:report] payload)
+                                                                             ::slave-2 (into [:report] payload)}}))}})
+                 interpreter (interpreter! master)]
+             (casync/go
+               (interpreter-start! interpreter)
+               (interpreter-send! interpreter :send-event)
+               (is (= (casync/<! c) [:report nil]) "Slave 1 recieved an event w/o payload")
+               (is (= (casync/<! c) [:report nil]) "Slave 2 recieved an event w/o payload")
+               (interpreter-send! interpreter :send-event-payload 1 2 3)
+               (is (= (casync/<! c) [:report [1 2 3]]) "Slave 1 recieved an event with payload")
+               (is (= (casync/<! c) [:report [1 2 3]]) "Slave 2 recieved an event with payload")
+               (done))))))
