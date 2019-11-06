@@ -10,7 +10,9 @@
                                           db-action
                                           fx-action
                                           ctx-action
-                                          idb-action]]
+                                          idb-action
+                                          ifx-action
+                                          ictx-action]]
             [re-frame.core :as rf]))
 
 
@@ -267,5 +269,71 @@
                (is (= (casync/<! c)
                       {::i1 {:val 1}
                        ::i2 {:val 2}})
-                   "Data isolation works correctly")
+                   "IDB action data isolation works correctly")
+               (done))))))
+
+
+(deftest ifx-action-test
+  (testing "IFX action isolation"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :simple-machine
+                             :initial :ready
+                             :states {:ready {:entry :in-ready}}}
+
+                            {:actions {:in-ready (ifx-action
+                                                  (fn [cofx [_ value]]
+                                                    (let [db (:db cofx)]
+                                                      {:db (assoc db :val value)})))}})
+                 interpreter-1 (interpreter! ::i1 m)
+                 interpreter-2 (interpreter! ::i2 m)]
+
+             (rf/reg-event-db
+              ::idb-action-test
+              (fn [db]
+                (casync/put! c db)
+                db))
+
+             (casync/go
+               (interpreter-start! interpreter-1 1)
+               (interpreter-start! interpreter-2 2)
+               (rf/dispatch [::idb-action-test])
+               (is (= (casync/<! c)
+                      {::i1 {:val 1}
+                       ::i2 {:val 2}})
+                   "IFX action data isolation works correctly")
+               (done))))))
+
+
+(deftest ictx-action-test
+  (testing "ICTX action isolation"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :simple-machine
+                             :initial :ready
+                             :states {:ready {:entry :in-ready}}}
+
+                            {:actions {:in-ready (ictx-action
+                                                  (fn [re-ctx [_ value]]
+                                                    (let [db (rf/get-coeffect re-ctx :db)]
+                                                      (rf/assoc-effect re-ctx
+                                                                       :db
+                                                                       (assoc db :val value)))))}})
+                 interpreter-1 (interpreter! ::i1 m)
+                 interpreter-2 (interpreter! ::i2 m)]
+
+             (rf/reg-event-db
+              ::idb-action-test
+              (fn [db]
+                (casync/put! c db)
+                db))
+
+             (casync/go
+               (interpreter-start! interpreter-1 1)
+               (interpreter-start! interpreter-2 2)
+               (rf/dispatch [::idb-action-test])
+               (is (= (casync/<! c)
+                      {::i1 {:val 1}
+                       ::i2 {:val 2}})
+                   "ICTX action data isolation works correctly")
                (done))))))
