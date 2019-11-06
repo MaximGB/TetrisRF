@@ -8,7 +8,8 @@
             [tetrisrf.xstate.actions :as actions]
             [tetrisrf.xstate.utils :as utils]
             [tetrisrf.xstate.co-effects :as co-effects]
-            [tetrisrf.xstate.effects :as effects]))
+            [tetrisrf.xstate.effects :as effects]
+            [tetrisrf.xstate.subscriptions :as subscriptions]))
 
 (def machine->config protocols/machine->config)
 (def machine->options protocols/machine->options)
@@ -45,6 +46,8 @@
 (def db-guard guards/db-guard)
 (def fx-guard guards/fx-guard)
 (def ctx-guard guards/ctx-guard)
+
+(def reg-isub subscriptions/reg-isub)
 
 (def register-interpreter! registry/register-interpreter!)
 (def unregister-interpreter! registry/unregister-interpreter!)
