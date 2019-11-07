@@ -33,7 +33,7 @@
 
 ;; Registers interpreter instance in the registry
 (rf/reg-fx
- ::register
+ :tetrisrf.xstate.core/fx-register
  (fn [id-and-interpreter]
    ;; Map is used to register multiple interpreters
    (if (map? id-and-interpreter)
@@ -45,7 +45,7 @@
 
 ;; Unregisters intrepreter instance in the registry
 (rf/reg-fx
- ::unregister
+ :tetrisrf.xstate.core/fx-unregister
  (fn [ids]
    (if (seqable? ids)
      ;; Multipe ids unregistration
@@ -57,7 +57,7 @@
 
 ;; Starts interpreter
 (rf/reg-fx
- ::start
+ :tetrisrf.xstate.core/fx-start
  (fn [id-and-payload]
    (cond
      ;; Map is used to start several interpreters
@@ -79,7 +79,7 @@
 
 ;; Stops interpreter
 (rf/reg-fx
- ::stop
+ :tetrisrf.xstate.core/fx-stop
  (fn [ids]
    (cond
      ;; Map might be used to stop several interpreters
@@ -101,7 +101,7 @@
 
 ;; Sends an event to an interpreter
 (rf/reg-fx
- ::send
+ :tetrisrf.xstate.core/fx-send
  (fn [id-and-event]
    (cond
      ;; Map might be used to send to several interpeters

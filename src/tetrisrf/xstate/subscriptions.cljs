@@ -4,7 +4,7 @@
 
 
 (rf/reg-sub
- ::interpreter-db
+ :tetrisrf.xstate.core/sub-interpreter-db
  (fn [db [_ interpreter]]
    (let [path (protocols/interpreter->path interpreter)]
      (get-in db path))))
@@ -13,7 +13,7 @@
 (defn isubscribe
   "Creates a reaction to changes in `interpreter` path isolated part of the app db."
   [interpreter]
-  (rf/subscribe [::interpreter-db interpreter]))
+  (rf/subscribe [:tetrisrf.xstate.core/sub-interpreter-db interpreter]))
 
 
 (defn reg-isub
@@ -30,3 +30,23 @@
    (fn [[_ interpreter]]
      (isubscribe interpreter))
    computation-fn))
+
+
+(reg-isub
+ :tetrisrf.xstate.core/sub-interpreter-state
+ (fn [idb [_ _ keywordize?]]
+   (let [state (:tetrisrf.xstate.core/state idb)]
+     (if keywordize?
+       (keyword state)
+       state))))
+
+
+(defn isubscribe-state
+  "Creates a reaction to changes in `interpreter` state.
+
+  Warning: state names will be returned as keywords, if this is not desired use :keywordize? false option.
+  Warning: if state names are given as namespaced keywords, like ::state, then this function will return them un-namespaced,
+           this is due to the fact that state names are converted to strings first, to be passed to JS world, and then
+           re-created from strings to keywords back, the namespace information is lost during the conversion."
+  [interpreter & {:keys [keywordize?] :or {keywordize? true}}]
+  (rf/subscribe [:tetrisrf.xstate.core/sub-interpreter-state interpreter keywordize?]))

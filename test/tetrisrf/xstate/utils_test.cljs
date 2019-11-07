@@ -2,8 +2,7 @@
   (:require [cljs.test :refer [deftest is testing async use-fixtures]]
             [goog.object :as gobject]
             [tetrisrf.xstate.core :refer [db-action]]
-            [tetrisrf.xstate.utils :refer [xs-interceptors
-                                           prepare-machine-config
+            [tetrisrf.xstate.utils :refer [prepare-machine-config
                                            prepare-machine-options
                                            meta-actions->interceptors-map
                                            machine-config->actions-interceptors
@@ -44,8 +43,8 @@
   (testing "Interceptors extractions from meta actions sequence"
     (let [a-fn (fn [])
           b-c-fn (fn [])
-          actions [(with-meta a-fn {xs-interceptors [:a]})
-                   (with-meta b-c-fn {xs-interceptors [:b :c]})]
+          actions [(with-meta a-fn {:tetrisrf.xstate.core/xs-interceptors [:a]})
+                   (with-meta b-c-fn {:tetrisrf.xstate.core/xs-interceptors [:b :c]})]
           interceptors (meta-actions->interceptors-map actions)]
       (is (= (get interceptors a-fn) [:a]) "A-fn interceptors are extracted correctly")
       (is (= (get interceptors b-c-fn) [:b :c]) "B-C-fn interceptors are extracted correctly"))))

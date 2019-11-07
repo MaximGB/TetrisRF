@@ -266,10 +266,11 @@
                (interpreter-start! interpreter-1 1)
                (interpreter-start! interpreter-2 2)
                (rf/dispatch [::idb-action-test])
-               (is (= (casync/<! c)
-                      {::i1 {:val 1}
-                       ::i2 {:val 2}})
-                   "IDB action data isolation works correctly")
+               (let [app-db (casync/<! c)]
+                 (is (and
+                      (= (get-in app-db [::i1 :val]) 1)
+                      (= (get-in app-db [::i2 :val]) 2))
+                     "IDB action data isolation works correctly"))
                (done))))))
 
 
@@ -298,10 +299,11 @@
                (interpreter-start! interpreter-1 1)
                (interpreter-start! interpreter-2 2)
                (rf/dispatch [::idb-action-test])
-               (is (= (casync/<! c)
-                      {::i1 {:val 1}
-                       ::i2 {:val 2}})
-                   "IFX action data isolation works correctly")
+               (let [app-db (casync/<! c)]
+                 (is (and
+                      (= (get-in app-db [::i1 :val]) 1)
+                      (= (get-in app-db [::i2 :val]) 2))
+                     "IFX action data isolation works correctly"))
                (done))))))
 
 
@@ -332,8 +334,9 @@
                (interpreter-start! interpreter-1 1)
                (interpreter-start! interpreter-2 2)
                (rf/dispatch [::idb-action-test])
-               (is (= (casync/<! c)
-                      {::i1 {:val 1}
-                       ::i2 {:val 2}})
-                   "ICTX action data isolation works correctly")
+               (let [app-db (casync/<! c)]
+                 (is (and
+                      (= (get-in app-db [::i1 :val]) 1)
+                      (= (get-in app-db [::i2 :val]) 2))
+                     "ICTX action data isolation works correctly"))
                (done))))))

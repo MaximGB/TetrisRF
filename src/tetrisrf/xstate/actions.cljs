@@ -31,7 +31,7 @@
   ([interceptors handler]
    (with-meta
      (db-action->re-ctx-handler handler)
-     {utils/xs-interceptors interceptors})))
+     {:tetrisrf.xstate.core/xs-interceptors interceptors})))
 
 
 (defn idb-action
@@ -55,7 +55,7 @@
                                           interpreter-path
                                           db-handler
                                           js-meta)))
-       {utils/xs-interceptors interceptors}))))
+       {:tetrisrf.xstate.core/xs-interceptors interceptors}))))
 
 
 
@@ -96,7 +96,7 @@
   ([interceptors handler]
    (with-meta
      (fx-action->re-ctx-handler handler)
-     {utils/xs-interceptors interceptors})))
+     {:tetrisrf.xstate.core/xs-interceptors interceptors})))
 
 
 (defn ifx-action
@@ -119,7 +119,7 @@
                                           interpreter-path
                                           fx-handler
                                           js-meta)))
-       {utils/xs-interceptors interceptors}))))
+       {:tetrisrf.xstate.core/xs-interceptors interceptors}))))
 
 
 (defn- ctx-action->re-ctx-handler
@@ -143,7 +143,7 @@
   ([interceptors handler]
    (with-meta
      (ctx-action->re-ctx-handler handler)
-     {utils/xs-interceptors interceptors})))
+     {:tetrisrf.xstate.core/xs-interceptors interceptors})))
 
 
 (defn ictx-action
@@ -156,6 +156,7 @@
 
   ([handler]
    (ictx-action [] handler))
+
   ([interceptors handler]
    (let [ctx-handler (ctx-action->re-ctx-handler handler)]
      (with-meta
@@ -166,4 +167,4 @@
                                           interpreter-path
                                           ctx-handler
                                           js-meta)))
-       {utils/xs-interceptors interceptors}))))
+       {:tetrisrf.xstate.core/xs-interceptors interceptors}))))

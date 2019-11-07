@@ -4,8 +4,11 @@
             [re-frame.core :as rf]
             [tetrisrf.xstate.core :refer [machine
                                           interpreter!
+                                          interpreter-start!
+                                          interpreter-send!
                                           reg-isub
                                           isubscribe
+                                          isubscribe-state
                                           idb-action]]))
 
 (def rf-checkpoint (volatile! nil))
@@ -49,4 +52,26 @@
                ;; Checking
                (is (= @(rf/subscribe [::my-sub i]) ::my-value) "Subscription returned isolated app db part 1")
                (is (= @(isubscribe i) ::my-value) "Subscription returned isolated app db part 2")
+               (done))))))
+
+(deftest isubscribe-state-test
+  (testing "Subscription to an interpreter state"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :test-machine
+                             :initial :ready
+                             :states {:ready {:entry #(casync/put! c :next)
+                                              :on {:run :running}}
+                                      :running {:entry #(casync/put! c :next)
+                                                :on {:stop :ready}}}})
+                 i (interpreter! m)
+                 s (isubscribe-state i)]
+             (casync/go
+               (interpreter-start! i)
+               (is (nil? @s) "State is unknown before interpreter entered initial state")
+               (casync/<! c) ;; waiting for state entry
+               (is (= @s :ready) "State subscription reported initial state")
+               (interpreter-send! i :run)
+               (casync/<! c) ;; waiting for state entry
+               (is (= @s :running) "State subscription reported running state")
                (done))))))

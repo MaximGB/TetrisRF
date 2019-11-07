@@ -54,17 +54,18 @@
 
 (def reg-isub subscriptions/reg-isub)
 (def isubscribe subscriptions/isubscribe)
+(def isubscribe-state subscriptions/isubscribe-state)
 
 (def register-interpreter! registry/register-interpreter!)
 (def unregister-interpreter! registry/unregister-interpreter!)
 (def has-interpreter? registry/has-interpreter?)
 (def id->interpreter registry/id->interpreter)
 
-(def cofx-instance ::co-effects/instance)
-(def cofx-spawn ::co-effects/spawn)
+(def cofx-instance ::cofx-instance)
+(def cofx-spawn ::cofx-spawn)
 
-(def fx-register ::effects/register)
-(def fx-unregister ::effects/unregister)
-(def fx-start ::effects/start)
-(def fx-stop ::effects/stop)
-(def fx-send ::effects/send)
+(def fx-register ::fx-register)
+(def fx-unregister ::fx-unregister)
+(def fx-start ::fx-start)
+(def fx-stop ::fx-stop)
+(def fx-send ::fx-send)

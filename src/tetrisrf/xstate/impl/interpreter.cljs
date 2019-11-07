@@ -48,6 +48,28 @@
                (execute-transition-actions re-ctx actions)))))
 
 
+;; Re-frame interceptor storing interpreter state under interpreter path ::state keyword
+(def store-state-interceptor
+  (rf/->interceptor
+   :id ::store-state-interceptor
+   :before (fn [re-ctx]
+             (let [interpreter (utils/re-ctx->*interpreter re-ctx)
+                   interpreter-path (protocols/interpreter->path interpreter)
+                   db (rf/get-coeffect re-ctx :db)
+                   idb (get-in db interpreter-path)]
+               (if (or (nil? idb) (and (associative? idb) (not (indexed? idb))))
+                 ;; If isolated interpreter db part allows associtiation by keyword
+                 (let [interpreter-state (protocols/interpreter->state interpreter)
+                       new-db (assoc-in db
+                                        (conj interpreter-path :tetrisrf.xstate.core/state)
+                                        (.-value interpreter-state))]
+                   (-> re-ctx
+                       (rf/assoc-coeffect #_re-ctx :db new-db)
+                       (rf/assoc-effect #_re-ctx :db new-db)))
+                 ;; Else if we can't store state just returning re-ctx un-altered
+                 re-ctx)))))
+
+
 ;; Re-frame event handler serving as the bridge between re-frame and XState
 (rf/reg-event-ctx
  ::xs-transition-event
@@ -126,7 +148,7 @@
           (vswap! *interpreter
                   assoc
                   :state xs-new-state)
-          (rf/enqueue re-ctx (conj interceptors exec-interceptor)))))))
+          (rf/enqueue re-ctx (conj interceptors store-state-interceptor exec-interceptor)))))))
 
 
 (defn interpreter!

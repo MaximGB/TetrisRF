@@ -45,9 +45,6 @@
       (into [])))
 
 
-(def xs-interceptors ::xs-interceptors)
-
-
 ;; TODO: simplify the path
 (def MACHINE-CONFIG-ACTIONS (specter/recursive-path []
                                                     p
@@ -98,7 +95,7 @@
   "Transforms sequence of actions with interceptors metadata into a map where keys are metaless normall JS functions and values are list of interceptors."
   [actions & {:keys [bare?] :or {bare? true}}]
   (reduce (fn [m action-fn]
-            (let [interceptors (xs-interceptors (meta action-fn))]
+            (let [interceptors (:tetrisrf.xstate.core/xs-interceptors (meta action-fn))]
               (assoc m
                      (.-afn action-fn)
                      (if-not bare?
