@@ -17,6 +17,16 @@
    `(machine-add-action! ~var-name ~id (db-action ~interceptors ~action-fn))))
 
 
+(defmacro def-action-idb
+  "Adds a DB-action with given `id` and handler function `action-fn` plus `interceptors` if needed to the machine defined by `var-name`."
+
+  ([var-name id action-fn]
+   `(machine-add-action! ~var-name ~id (idb-action ~action-fn)))
+
+  ([var-name id interceptors action-fn]
+   `(machine-add-action! ~var-name ~id (idb-action ~interceptors ~action-fn))))
+
+
 (defmacro def-action-fx
   "Adds a FX-action with given `id` and handler function `action-fn` plus `interceptors` if needed to the machine defined by `var-name`."
 
@@ -27,6 +37,16 @@
    `(machine-add-action! ~var-name ~id (fx-action ~interceptors ~action-fn))))
 
 
+(defmacro def-action-ifx
+  "Adds a isolated FX-action with given `id` and handler function `action-fn` plus `interceptors` if needed to the machine defined by `var-name`."
+
+  ([var-name id action-fn]
+   `(machine-add-action! ~var-name ~id (ifx-action ~action-fn)))
+
+  ([var-name id interceptors action-fn]
+   `(machine-add-action! ~var-name ~id (ifx-action ~interceptors ~action-fn))))
+
+
 (defmacro def-action-ctx
   "Adds a CTX-action with given `id` and handler function `action-fn` plus `interceptors` if needed to the machine defined by `var-name`."
 
@@ -35,6 +55,16 @@
 
   ([var-name id interceptors action-fn]
    `(machine-add-action! ~var-name ~id (ctx-action ~interceptors ~action-fn))))
+
+
+(defmacro def-action-ictx
+  "Adds a isolated CTX-action with given `id` and handler function `action-fn` plus `interceptors` if needed to the machine defined by `var-name`."
+
+  ([var-name id action-fn]
+   `(machine-add-action! ~var-name ~id (ictx-action ~action-fn)))
+
+  ([var-name id interceptors action-fn]
+   `(machine-add-action! ~var-name ~id (ictx-action ~interceptors ~action-fn))))
 
 
 (defmacro def-guard-ev
@@ -51,12 +81,24 @@
   `(machine-add-guard! ~var-name ~id (db-guard ~guard-fn)))
 
 
+(defmacro def-guard-idb
+  "Adds a isolated DB-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
+
+  [var-name id guard-fn]
+  `(machine-add-guard! ~var-name ~id (idb-guard ~guard-fn)))
+
+
 (defmacro def-guard-fx
   "Adds a FX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
 
   [var-name id guard-fn]
    `(machine-add-guard! ~var-name ~id (fx-guard ~guard-fn)))
 
+(defmacro def-guard-ifx
+  "Adds a isolated FX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
+
+  [var-name id guard-fn]
+  `(machine-add-guard! ~var-name ~id (ifx-guard ~guard-fn)))
 
 (defmacro def-guard-ctx
   "Adds a CTX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
@@ -64,5 +106,8 @@
   [var-name id guard-fn]
    `(machine-add-guard! ~var-name ~id (ctx-guard ~guard-fn)))
 
+(defmacro def-guard-ictx
+  "Adds a isolated CTX-guard with given `id` and handler function `guard-fn` to the machine defined by `var-name`."
 
-;; TODO: add isolated versions of those guards/actions
+  [var-name id guard-fn]
+  `(machine-add-guard! ~var-name ~id (ictx-guard ~guard-fn)))

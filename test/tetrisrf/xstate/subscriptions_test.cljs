@@ -54,6 +54,7 @@
                (is (= @(isubscribe i) ::my-value) "Subscription returned isolated app db part 2")
                (done))))))
 
+
 (deftest isubscribe-state-test
   (testing "Subscription to an interpreter state"
     (async done
