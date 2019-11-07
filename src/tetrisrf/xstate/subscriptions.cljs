@@ -36,9 +36,18 @@
  :tetrisrf.xstate.core/sub-interpreter-state
  (fn [idb [_ _ keywordize?]]
    (let [state (:tetrisrf.xstate.core/state idb)]
-     (if keywordize?
+     (cond
+       (and (string? state) keywordize?)
        (keyword state)
-       state))))
+
+       (string? state)
+       state
+
+       keywordize?
+       (js->clj state :keywordize-keys true)
+
+       :else
+       (js->clj state)))))
 
 
 (defn isubscribe-state

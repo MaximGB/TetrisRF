@@ -7,9 +7,11 @@
                                                  db-action
                                                  interpreter!
                                                  interpreter->machine
+                                                 interpreter->state
                                                  interpreter-start!
                                                  interpreter-stop!
-                                                 interpreter-send!]]))
+                                                 interpreter-send!
+                                                 isubscribe-state]]))
 
 (def rf-checkpoint (volatile! nil))
 
@@ -80,4 +82,35 @@
                (interpreter-start! interpreter :one :two)
                (is (= (casync/<! c) init-event) "Init event recieved")
                (is (= (casync/<! c) [:one :two]) "Init event payload recieved")
+               (done))))))
+
+
+(deftest parallel-states-report-and-transition-test
+  (testing "Parallel states transition and reporting"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :parallel-machine
+                             :initial :ready
+                             :states {:ready {:entry #(casync/put! c ::check)
+                                              :type :parallel
+                                              :states {:ready-one {:initial :waiting
+                                                                   :states {:waiting {:on {:run :running}}
+                                                                            :running {:entry #(casync/put! c ::check)}}}
+                                                       :ready-two {:initial :waiting
+                                                                   :states {:waiting {:on {:run :running}}
+                                                                            :running {:entry #(casync/put! c ::check)}}}}}}})
+                 i (interpreter! m)
+                 s (isubscribe-state i)]
+             (casync/go
+               (interpreter-start! i)
+               (casync/<! c) ;; waiting for check time
+               (is (= @s {:ready {:ready-one "waiting"
+                                  :ready-two "waiting"}})
+                   "Correct interpreter state reported")
+               (interpreter-send! i :run )
+               (casync/<! c) ;; waiting for check time from one state
+               (casync/<! c) ;; waiting for check time from another state
+               (is (= @s {:ready {:ready-one "running"
+                                  :ready-two "running"}})
+                   "Correct interpreter transition executed")
                (done))))))
