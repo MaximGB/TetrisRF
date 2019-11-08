@@ -6,8 +6,6 @@
                                                  init-event
                                                  db-action
                                                  interpreter!
-                                                 interpreter->machine
-                                                 interpreter->state
                                                  interpreter-start!
                                                  interpreter-stop!
                                                  interpreter-send!
