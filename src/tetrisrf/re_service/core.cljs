@@ -36,7 +36,30 @@
 
 
 (defn register-service
-  "TODO: document"
+  "Registers service with the given `service-id`, in re-frame co-effects/effects infracstructure.
+
+   Having service and service commands (using (register-service-command) call ) registered, re-frame event handlers
+   can request service command execution results to be injected as co-effects as well as issue effects which will be
+   handled by service commands.
+
+   Example:
+   --------
+
+   (register-service ::my-service)
+
+   (rf/reg-event-fx
+   ::my-event-handler
+   [(rf/inject-cofx ::my-service [::command-id command-args ::another-command-id command-args])]
+   (fn [cofx]
+     {::my-service [::command-id command-args ::command-id command-args]}))
+
+   Service commands results invoked as co-effects will be returned in co-effects map unders `service-id` key,
+   the key value will be a map keyed by command-id with map values as command execution results.
+
+   Example:
+   --------
+   {::my-service {::command-1 results-1
+                  ::command-2 results-2}}"
   [service-id]
   (rf/reg-cofx
    service-id
@@ -44,3 +67,35 @@
   (rf/reg-fx
    service-id
    (make-fx-service-handler service-id)))
+
+
+(defn register-service-command-raw
+  "Register command with the given `command-id` for the service with the given `service-id`.
+
+   `handler` will be called with the `service-id` `command-id` as the first and second arguments, the rest arguments
+    will be taken from user's co-effects/effects service command invokation request.
+
+    Example:
+    --------
+    (inject-cofx ::service-id [::command-id rest-arguments])
+
+    {::service-id [::command-id rest-arguments]}"
+  [service-id command-id handler]
+  (defmethod exec-service-command [service-id command-id] [& args] (apply handler args)))
+
+
+(defn register-service-command
+  "Register command with the given `command-id` for the service with the given `service-id`.
+
+   `handler` will be called with the arguments taken from user's co-effects/effects service command invokation request.
+
+    Example:
+    --------
+    (inject-cofx ::service-id [::command-id rest-arguments])
+
+    {::service-id [::command-id rest-arguments]}"
+  [service-id command-id handler]
+  (register-service-command-raw service-id
+                                command-id
+                                (fn [_ _ & args]
+                                  (apply handler args))))

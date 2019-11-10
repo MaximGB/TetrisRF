@@ -3,7 +3,8 @@
             [cljs.core.async :as casync]
             [re-frame.core :as rf]
             [tetrisrf.re-service.core :refer [exec-service-command
-                                              register-service]]))
+                                              register-service
+                                              register-service-command]]))
 
 
 (def rf-checkpoint (volatile! nil))
@@ -23,18 +24,23 @@
              (register-service ::test-service)
 
 
-             (defmethod exec-service-command [::test-service ::command-1] [_ _ & args]
-               (casync/put! c args)
-               ::command-1-result)
+             (register-service-command ::test-service
+                                       ::command-1
+                                       (fn [& args]
+                                         (casync/put! c args)
+                                         ::command-1-result))
 
 
-             (defmethod exec-service-command [::test-service ::command-2] [_ _ & args]
-               (casync/put! c (reverse args))
-               ::command-2-result)
+             (register-service-command ::test-service
+                                       ::command-2
+                                       (fn [& args]
+                                         (casync/put! c (reverse args))
+                                         ::command-2-result))
 
-
-             (defmethod exec-service-command [::test-service ::command-3] [_ _ result]
-               (casync/put! c result))
+             (register-service-command ::test-service
+                                       ::command-3
+                                       (fn [result]
+                                         (casync/put! c result)))
 
 
              (rf/reg-event-fx
