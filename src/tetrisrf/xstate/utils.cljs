@@ -100,8 +100,15 @@
                      (.-afn action-fn)
                      (if-not bare?
                        (map (fn [interceptor]
-                              (if (or (keyword? interceptor) (symbol? interceptor) (string? interceptor) (number? interceptor))
+                              (cond
+                                ;; Signle keyword/symbol/string/number is considered as interceptor id
+                                (or (keyword? interceptor) (symbol? interceptor) (string? interceptor) (number? interceptor))
                                 (rf/inject-cofx interceptor)
+                                ;; Sequence or vector is considered as co-effect id & rest params
+                                (or (seq? interceptor) (vector? interceptor))
+                                (rf/inject-cofx (first interceptor) (rest interceptor))
+                                ;; Everything else is considered to be an interceptor re-frame can handle on itself
+                                :else
                                 interceptor))
                             interceptors)
                        interceptors))))
