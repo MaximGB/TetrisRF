@@ -112,3 +112,8 @@
                                   :ready-two "running"}})
                    "Correct interpreter transition executed")
                (done))))))
+
+
+(deftest interceptors-given-as-sequences-test
+  (testing "Interceptors handling given as sequences or vectors"
+    #_TODO))

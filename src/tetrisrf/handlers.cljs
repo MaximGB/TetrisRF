@@ -26,13 +26,6 @@
 
 
 (rf/reg-event-fx
- :xstate
- (fn [cofx [_ state]]
-   (.log js/console (.-value state))
-   {}))
-
-
-(rf/reg-event-fx
  :action-new
  (fn [cofx]
    (let [db (:db cofx)
@@ -114,8 +107,7 @@
                      :game-over false
                      :next-tetramino next-tetramino
                      :next-tetramino-field (place-tetramino-centered (make-next-tetramino-field) next-tetramino :center-v true)))
-        :dispatch [:action-new]
-        :xsend [(:xservice db) :toggle]}))))
+        :dispatch [:action-new]}))))
 
 
 (rf/reg-event-fx

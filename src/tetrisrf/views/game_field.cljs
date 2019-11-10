@@ -43,13 +43,12 @@
   (let [ctx2d (.getContext canvas "2d")
         field-width (:width field)
         field-height (:height field)
-        [cell-width cell-height] cell-size
-        tetramino (:tetramino field)]
+        [cell-width cell-height] cell-size]
     ;; Erasing everything
     (set! (.-fillStyle ctx2d) color-white)
     (.fillRect ctx2d 0 0 (* field-width cell-width) (* field-height cell-height))
     ;; Drawing tetramino if present
-    (when tetramino
+    (when-let [tetramino (:tetramino field)]
       (draw-tetramino! ctx2d
                        cell-size
                        tetramino))

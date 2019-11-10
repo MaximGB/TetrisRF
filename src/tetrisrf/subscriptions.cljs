@@ -1,31 +1,31 @@
 (ns tetrisrf.subscriptions
-  (:require [re-frame.core :as rf]))
+  (:require [tetrisrf.xstate.core :as xs]))
 
-(rf/reg-sub
- :field
+(xs/reg-isub
+ :tetrisrf.core/field
  (fn [db]
    (:field db)))
 
 
-(rf/reg-sub
- :score
+(xs/reg-isub
+ :tetrisrf.core/score
  (fn [db]
-   (db :score)))
+   (:score db)))
 
 
-(rf/reg-sub
- :game-over
+(xs/reg-isub
+ :tetrisrf.core/game-over
  (fn [db]
-   (db :game-over)))
+   (:game-over db)))
 
 
-(rf/reg-sub
- :level
+(xs/reg-isub
+ :tetrisrf.core/level
  (fn [db]
    (:level db)))
 
 
-(rf/reg-sub
- :next-tetramino-field
+(xs/reg-isub
+ :tetrisrf.core/next-tetramino-field
  (fn [db]
    (:next-tetramino-field db)))

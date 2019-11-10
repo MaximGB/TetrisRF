@@ -8,8 +8,7 @@
             [tetrisrf.views.tetris-panel :refer [tetris-panel]]))
 
 (defn ^:after-load -main []
-  (rf/dispatch-sync [:initialize-db])
-  (reagent/render [:div [tetris-panel] [messages]] (.getElementById js/document "app")))
+  (reagent/render [:div [tetris-panel] #_[messages]] (.getElementById js/document "app")))
 
 
 (.addEventListener js/window "load" (fn [] (-main)))
