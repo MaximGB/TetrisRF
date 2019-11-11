@@ -111,7 +111,7 @@
           field (:field db)]
       (merge db {:field (place-tetramino-centered field next-tetramino)
                  :next-tetramino next-next-tetramino
-                 :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino)}))))
+                 :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true)}))))
 
 
 (xs/def-guard-idb
@@ -200,25 +200,29 @@
   (fn [db]
     (let [field (:field db)
           field-blended (blend-tetramino field)
-          next-tetramino (:next-tetramino db)
           complete-lines-count (field-complete-lines-count field-blended)
           field-cleared (field-remove-complete-lines field-blended)
           score (calc-score (:score db) complete-lines-count)
           next-level-score (:next-level-score db)
-          level-up (>= score next-level-score)
-          new-next-level-score (if level-up (calc-next-level-score score))
           level (:level db)
           timer-interval (:timer-interval db)
-          new-timer-interval (if level-up
-                               (calc-next-level-timer-interval timer-interval)
-                               timer-interval)
-          timer-id (:timer-id db)]
+          level-up (>= score next-level-score)]
       (assoc db
              :field field-cleared
+
              :score score
-             :level (if level-up (inc level) level)
-             :next-level-score (if level-up new-next-level-score next-level-score)
-             :timer-interval new-timer-interval))))
+
+             :level (if level-up
+                      (inc level)
+                      level)
+
+             :next-level-score (if level-up
+                                 (calc-next-level-score score)
+                                 next-level-score)
+
+             :timer-interval (if level-up
+                               (calc-next-level-timer-interval timer-interval)
+                               timer-interval)))))
 
 
 (xs/def-action-ifx

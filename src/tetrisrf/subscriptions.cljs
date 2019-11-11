@@ -8,24 +8,24 @@
 
 
 (xs/reg-isub
- :tetrisrf.core/score
+ :tetrisrf.core/next-tetramino-field
  (fn [db]
-   (:score db)))
+   (:next-tetramino-field db)))
 
 
 (xs/reg-isub
- :tetrisrf.core/game-over
+ :tetrisrf.core/score
  (fn [db]
-   (:game-over db)))
+   (or (:score db) 0)))
 
 
 (xs/reg-isub
  :tetrisrf.core/level
  (fn [db]
-   (:level db)))
+   (or (:level db) 0)))
 
 
 (xs/reg-isub
- :tetrisrf.core/next-tetramino-field
+ :tetrisrf.core/game-over
  (fn [db]
-   (:next-tetramino-field db)))
+   (or (:game-over db) false)))

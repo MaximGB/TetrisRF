@@ -57,9 +57,9 @@
                             [:div.ui.raised.segment.field-frame
                              [game-field (rf/subscribe [:tetrisrf.core/field itm])]]]
                            [:div.column.six.wide
-                            #_[score-panel]
-                            #_[level-panel]
-                            #_[next-panel]]]])
+                            [score-panel (rf/subscribe [:tetrisrf.core/score itm])]
+                            [level-panel (rf/subscribe [:tetrisrf.core/level itm])]
+                            [next-panel  (rf/subscribe [:tetrisrf.core/next-tetramino-field itm])]]]])
        :component-did-mount (fn [cmp]
                               (let [node (reagent/dom-node cmp)]
                                 (.focus node)))}))))
