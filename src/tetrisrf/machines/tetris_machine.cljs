@@ -26,8 +26,10 @@
    :initial :ready
 
    :states {:ready     {:entry :initialize-db
-                        :on    {:action-run-pause  {:cond    :can-place-next-tetramino?
-                                                    :target  :playing}}}
+                        :on    {:action-run-pause  [{:cond    :can-place-next-tetramino?
+                                                     :target  :playing}
+
+                                                    {:target  :game-over}]}}
 
             :playing   {:entry [:init-timer :place-next-tetramino]
                         :exit  :dispose-timer
@@ -36,10 +38,10 @@
                                                     :actions :move-down}
 
                                                    {:cond    :can-place-next-tetramino?
-                                                    :actions [:blend-tetramino :place-next-tetramino]}
+                                                    :actions [:blend-tetramino :update-timer-interval :place-next-tetramino]}
 
-                                                   {:target  :game-over
-                                                    :actions :blend-tetramino}]
+                                                   {:actions :blend-tetramino
+                                                    :target  :game-over}]
 
                                 :action-right      {:cond    :can-move-right?
                                                     :actions :move-right}
@@ -56,7 +58,10 @@
                                 :action-rotate-ccw {:cond    :can-rotate-ccw?
                                                     :actions :rotate-ccw}}}
 
-            :game-over {:entry #(cljs.pprint/pprint "Game-over")}}})
+            :game-over {:entry #(cljs.pprint/pprint "Game-over")
+
+                        :on    {:action-run-pause {:target :playing
+                                                   :actions :initialize-db}}}}})
 
 
 (xs/def-action-idb
@@ -90,8 +95,10 @@
   machine
   :dispose-timer
   (fn [cofx]
-    (let [timer-id (get-in cofx [:db :timer-id])]
-     {::timer/timer [::timer/unregister [timer-id]]})))
+    (let [db (:db cofx)
+          timer-id (get-in cofx [:db :timer-id])]
+      {:db (dissoc db :timer-id)
+       ::timer/timer [::timer/unregister [timer-id]]})))
 
 
 (xs/def-action-idb
@@ -102,9 +109,9 @@
           next-next-tetramino (rand-nth tetraminos)
           next-tetramino-field (:next-tetramino-field db)
           field (:field db)]
-      {:field (place-tetramino-centered field next-tetramino)
-       :next-tetramino next-next-tetramino
-       :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino)})))
+      (merge db {:field (place-tetramino-centered field next-tetramino)
+                 :next-tetramino next-next-tetramino
+                 :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino)}))))
 
 
 (xs/def-guard-idb
@@ -187,13 +194,11 @@
       (can-act? field-blended #(place-tetramino-centered %1 next-tetramino)))))
 
 
-(xs/def-action-ifx
+(xs/def-action-idb
   machine
   :blend-tetramino
-  [xs/cofx-instance]
-  (fn [cofx]
-    (let [db (:db cofx)
-          field (:field db)
+  (fn [db]
+    (let [field (:field db)
           field-blended (blend-tetramino field)
           next-tetramino (:next-tetramino db)
           complete-lines-count (field-complete-lines-count field-blended)
@@ -204,16 +209,23 @@
           new-next-level-score (if level-up (calc-next-level-score score))
           level (:level db)
           timer-interval (:timer-interval db)
-          new-timer-interval (if level-up (calc-next-level-timer-interval timer-interval))
+          new-timer-interval (if level-up
+                               (calc-next-level-timer-interval timer-interval)
+                               timer-interval)
           timer-id (:timer-id db)]
-      {:db (assoc db
-                  :field field-cleared
-                  :score score
-                  :level (if level-up (inc level) level)
-                  :next-level-score (if level-up new-next-level-score next-level-score)
-                  :timer-interval (if level-up new-timer-interval timer-interval))
+      (assoc db
+             :field field-cleared
+             :score score
+             :level (if level-up (inc level) level)
+             :next-level-score (if level-up new-next-level-score next-level-score)
+             :timer-interval new-timer-interval))))
 
-       ::timer/timer [::timer/set-interval [timer-id (if level-up new-timer-interval timer-interval)]]})))
+
+(xs/def-action-ifx
+  machine
+  :update-timer-interval
+  (fn [cofx]
+    {::timer/timer [::timer/set-interval [(get-in cofx [:db :timer-id]) (get-in cofx [:db :timer-interval])]]}))
 
 
 (xs/def-action-fx

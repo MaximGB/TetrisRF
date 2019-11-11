@@ -340,3 +340,54 @@
                       (= (get-in app-db [::i2 :val]) 2))
                      "ICTX action data isolation works correctly"))
                (done))))))
+
+
+(deftest multiple-actions-db-manipulation-test
+  (testing "Multiple actions db manipulation test, results should merge, not overwrite each other"
+    (async done
+           (let [c (casync/timeout 100)
+                 m (machine {:id :simple-machine
+                             :initial :ready
+                             :states {:ready {:entry [:a1 :a2 :a3 :a4 :a5 :a6]}}}
+
+                            {:actions {:a1 (idb-action
+                                            (fn [db]
+                                              (assoc db :a1 :a1)))
+                                       :a2 (idb-action
+                                            (fn [db]
+                                              (assoc db :a2 :a2)))
+                                       :a3 (ifx-action
+                                            (fn [cofx]
+                                              (let [db (:db cofx)]
+                                                {:db (assoc db :a3 :a3)})))
+                                       :a4 (ifx-action
+                                            (fn [cofx]
+                                              (let [db (:db cofx)]
+                                                {:db (assoc db :a4 :a4)})))
+                                       :a5 (ictx-action
+                                            (fn [re-ctx]
+                                              (let [db (rf/get-coeffect re-ctx :db)]
+                                                (rf/assoc-effect re-ctx :db (assoc db :a5 :a5)))))
+                                       :a6 (ictx-action
+                                            (fn [re-ctx]
+                                              (let [db (rf/get-coeffect re-ctx :db)]
+                                                (rf/assoc-effect re-ctx :db (assoc db :a6 :a6)))))}})
+                 i (interpreter! ::a m)]
+
+             (rf/reg-event-db
+              ::check
+              (fn [db]
+                (casync/put! c db)
+                db))
+
+             (casync/go
+               (interpreter-start! i)
+               (rf/dispatch [::check])
+               (let [db (casync/<! c)]
+                 (is (= (get-in db [::a :a1]) :a1) "1st action db changed applied")
+                 (is (= (get-in db [::a :a2]) :a2) "2nd action db changed applied")
+                 (is (= (get-in db [::a :a3]) :a3) "3rd action db changed applied")
+                 (is (= (get-in db [::a :a4]) :a4) "4th action db changed applied")
+                 (is (= (get-in db [::a :a5]) :a5) "5th action db changed applied")
+                 (is (= (get-in db [::a :a6]) :a6) "6th action db changed applied"))
+               (done))))))

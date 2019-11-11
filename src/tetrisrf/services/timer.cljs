@@ -32,15 +32,15 @@
 
 
 (rs/def-re-service-command
-  ::timer
-  ::unregister
-  [timer-id & {:keys [dispose?] :or {dispose? true}}]
-  (if-let [timer (@*timers timer-id)]
-    (if dispose?
-      (dispose-timer timer)))
-  (vswap! *timers
-          dissoc
-          timer-id))
+   ::timer
+   ::unregister
+   [timer-id & {:keys [dispose?] :or {dispose? true}}]
+   (if-let [timer (@*timers timer-id)]
+     (if dispose?
+       (dispose-timer timer)))
+   (vswap! *timers
+           dissoc
+           timer-id))
 
 
 (rs/def-re-service-command

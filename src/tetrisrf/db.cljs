@@ -5,8 +5,8 @@
              [default-timer-interval
               field-cell-height
               field-cell-width
-              first-level-score]]
-            [tetrisrf.timer :refer [create-timer]]))
+              first-level-score]]))
+
 
 (defn make-empty-field
   ([]
@@ -39,5 +39,4 @@
                  :level 0
                  :score 0
                  :next-level-score first-level-score
-                 :timer-interval default-timer-interval
-                 :timer (create-timer default-timer-interval (fn [] (rf/dispatch [:tick])))})
+                 :timer-interval default-timer-interval})
