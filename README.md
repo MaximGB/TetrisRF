@@ -12,5 +12,7 @@ The project is my atempt to get acquainted with re-frame library which resulted 
 
 The resulting and playable demo can be found [here](https://maximgb.github.io/TetrisRF/example/).
 <div style="text-align: center">
-  ![Demo screenshot](https://maximgb.github.io/TetrisRF/images/demo.png "Demo screenshot")
+  <a href="https://maximgb.github.io/TetrisRF/example" title="Go to the demo">
+    <img src="https://maximgb.github.io/TetrisRF/images/demo.png" alt="Demo screenshot"/>
+  </a>
 </div>
