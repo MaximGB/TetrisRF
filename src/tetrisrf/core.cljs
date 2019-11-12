@@ -8,7 +8,7 @@
 
 (defn ^:after-load -main []
   (reagent/render [:div
-                   [:h1.ui.blue.header.centered "Tetris example."]
+                   [:h1.ui.red.header.centered "Tetris example"]
                    [tetris-panel]]
                   (.getElementById js/document "app")))
 

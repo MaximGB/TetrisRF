@@ -5,7 +5,7 @@
                                     set-timer-interval
                                     set-timer-tick-handler
                                     dispose-timer]]
-            [tetrisrf.re-service.core :as rs]))
+            [tetrisrf.re-service.core :as rs :include-macros true]))
 
 
 (def *timers (volatile! {}))
@@ -47,7 +47,6 @@
   ::timer
   ::dispose
   [timer-id]
-  (cljs.pprint/pprint "!!!")
   (if-let [timer (@*timers timer-id)]
     (dispose-timer timer)))
 
