@@ -5,12 +5,12 @@
         re-frame/re-frame {:mvn/version "0.10.6"}
         net.mikera/core.matrix {:mvn/version "0.62.0"}
         com.rpl/specter {:mvn/version "1.1.2"}}
- :paths ["src" "resources"]
- :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
-                              com.bhauman/figwheel-main {:mvn/version "0.2.3"}}
-                 :extra-paths ["target"]}
 
-           :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
-                   :extra-paths ["test"]}
+ :paths ["src" "resources" "target" "test"]
+
+ :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
+                              com.bhauman/figwheel-main {:mvn/version "0.2.3"}}}
+
+           :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
 
            :min   {:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]}}}
