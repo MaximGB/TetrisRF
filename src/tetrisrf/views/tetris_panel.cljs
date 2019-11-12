@@ -86,7 +86,14 @@
                               [:div.header
                                "Ready."]
                               [:div.content
-                               "Press Enter to restart."]]
+                               "Game controls:"
+                               [:ul
+                                [:li "[Up Arrow] rotate clockwise"]
+                                [:li "[Shift + Up Arrow] rotate counter clockwise"]
+                                [:li "[Left Arrow] move left"]
+                                [:li "[Right Arrow] move right"]
+                                [:li "[Down Arrow] drop"]]
+                               "Press Enter to start."]]
 
                              ;; default
                              nil)]])
