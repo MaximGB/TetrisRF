@@ -43,34 +43,45 @@
       {:display-name "Tetris"
 
        :reagent-render (fn []
-                         [:div.tetris-panel.ui.four.column.centered.grid
+                         [:div.tetris-container
                           {:style {:outline :none}
                            :tab-index -1
                            :on-key-down (fn [e]
                                           (.preventDefault e)
                                           (dispatch-key-event itm e game-keys))}
-                          (case @state-sub
-                            :playing
-                            [:div.row
-                             [:div.column.two.wide
-                              {:style {:display :flex
-                                       :justify-content :center}}
-                              [:div.ui.raised.segment.field-frame
-                               [game-field (rf/subscribe [:tetrisrf.core/field itm])]]]
-                             [:div.column.two.wide
-                              [score-panel (rf/subscribe [:tetrisrf.core/score itm])]
-                              [level-panel (rf/subscribe [:tetrisrf.core/level itm])]
-                              [next-panel  (rf/subscribe [:tetrisrf.core/next-tetramino-field itm])]]]
+                          [:div.tetris-panel.ui.four.column.centered.grid
 
-                            :game-over
-                            [:div.row
-                             [:div.column.four.wide.middle.aligned
-                              "Game Over! Press Enter to restart."]]
+                           ;; Game panel
+                           [:div.row
+                            [:div.column.two.wide
+                             {:style {:display :flex
+                                      :justify-content :center}}
+                             [:div.ui.raised.segment.field-frame
+                              [game-field (rf/subscribe [:tetrisrf.core/field itm])]]]
+                            [:div.column.two.wide
+                             [score-panel (rf/subscribe [:tetrisrf.core/score itm])]
+                             [level-panel (rf/subscribe [:tetrisrf.core/level itm])]
+                             [next-panel  (rf/subscribe [:tetrisrf.core/next-tetramino-field itm])]]]]
 
-                            ;;default
-                            [:div.row
-                             [:div.column.four.wide.middle.aligned
-                              "Press entrer to start playing."]])])
+                          ;; Floats
+                          [:div.tetris-floats
+                           (case @state-sub
+                             :game-over
+                             [:div.ui.tiny.modal.active
+                              [:div.header
+                               "Game over!"]
+                              [:div.content
+                               "Press Enter to restart."]]
+
+                             :ready
+                             [:div.ui.tiny.modal.active
+                              [:div.header
+                               "Ready."]
+                              [:div.content
+                               "Press Enter to restart."]]
+
+                             ;; default
+                             nil)]])
 
        :component-did-mount (fn [cmp]
                               (let [node (reagent/dom-node cmp)]

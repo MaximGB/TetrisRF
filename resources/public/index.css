@@ -1,3 +1,21 @@
+#app .tetris-container {
+    position: relative;
+}
+
+#app .tetris-floats {
+    position: absolute;
+    top: 20%;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+#app .tetris-floats .modal {
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
 #app div.input {
     margin-bottom: 1em;
 }

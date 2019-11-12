@@ -58,17 +58,17 @@
                                 :action-rotate-ccw {:cond    :can-rotate-ccw?
                                                     :actions :rotate-ccw}}}
 
-            :game-over {:on    {:action-run-pause {:target :playing
-                                                   :actions :initialize-db}}}}})
+            :game-over {:on    {:action-run-pause  {:target  :playing
+                                                    :actions :initialize-db}}}}})
 
 
 (xs/def-action-idb
   machine
   :initialize-db
   (fn [db]
-    (assoc initial-db
-           :next-tetramino
-           (rand-nth tetraminos))))
+    (-> db
+        (merge initial-db)
+        (assoc :next-tetramino (rand-nth tetraminos)))))
 
 
 (xs/def-action-ifx
@@ -107,9 +107,10 @@
           next-next-tetramino (rand-nth tetraminos)
           next-tetramino-field (:next-tetramino-field db)
           field (:field db)]
-      (merge db {:field (place-tetramino-centered field next-tetramino)
-                 :next-tetramino next-next-tetramino
-                 :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true)}))))
+      (assoc db
+             :field (place-tetramino-centered field next-tetramino)
+             :next-tetramino next-next-tetramino
+             :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true)))))
 
 
 (xs/def-guard-idb
