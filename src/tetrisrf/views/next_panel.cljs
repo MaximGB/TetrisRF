@@ -3,7 +3,7 @@
             [tetrisrf.views.game-field :refer [game-field]]))
 
 (defn next-panel [next-field-sub]
-  [:div.ui.labeled.big.input.next-field
+  [:div.next-field.fluid.ui.labeled.big.input
    [:div.ui.label.big "Next"]
    [:div.field-frame
     [game-field next-field-sub]]])

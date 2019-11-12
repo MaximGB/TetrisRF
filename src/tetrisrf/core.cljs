@@ -3,9 +3,9 @@
             [reagent.core :as reagent]
             [tetrisrf.effects]
             [tetrisrf.subscriptions]
-            [tetrisrf.handlers]
             [tetrisrf.views.messages :refer [messages]]
             [tetrisrf.views.tetris-panel :refer [tetris-panel]]))
+
 
 (defn ^:after-load -main []
   (reagent/render [:div [tetris-panel] #_[messages]] (.getElementById js/document "app")))

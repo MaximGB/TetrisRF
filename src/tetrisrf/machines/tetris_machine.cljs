@@ -58,9 +58,7 @@
                                 :action-rotate-ccw {:cond    :can-rotate-ccw?
                                                     :actions :rotate-ccw}}}
 
-            :game-over {:entry #(cljs.pprint/pprint "Game-over")
-
-                        :on    {:action-run-pause {:target :playing
+            :game-over {:on    {:action-run-pause {:target :playing
                                                    :actions :initialize-db}}}}})
 
 

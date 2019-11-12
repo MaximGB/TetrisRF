@@ -34,8 +34,6 @@
 (def initial-db {:field (make-empty-field)
                  :next-tetramino-field (make-next-tetramino-field)
                  :next-tetramino nil
-                 :running false
-                 :game-over false
                  :level 0
                  :score 0
                  :next-level-score first-level-score
