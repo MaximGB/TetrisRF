@@ -16,3 +16,13 @@ The resulting and playable demo can be found [here](https://maximgb.github.io/Te
     <img src="https://maximgb.github.io/TetrisRF/images/demo.png" alt="Demo screenshot"/>
   </a>
 </div>
+
+
+## Setup instructions
+
+```shell
+git clone git@github.com:MaximGB/TetrisRF.git
+cd ./TetrisRF
+make npmi
+make run
+```
