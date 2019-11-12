@@ -1,6 +1,6 @@
 TARGET = minbuild-predeploy
 
-.PHONY:	clean semantic compile predeploy gh
+.PHONY:	clean semantic compile example gh run
 
 all : $(TARGET)
 
@@ -15,7 +15,7 @@ semantic:
 
 compile:
 	npx webpack
-	clj -A:fig:min
+	clj -A\:fig\:min
 
 example:
 	mkdir -p docs/example
@@ -26,4 +26,8 @@ example:
 gh: $(TARGET)
 	git push -n origin HEAD
 
-$(TARGET) : clean semantic compile example
+run: semantic
+	npx webpack
+	clj -A\:fig\:build
+
+$(TARGET): clean semantic compile example
