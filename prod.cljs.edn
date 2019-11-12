@@ -1,8 +1,8 @@
-^{:watch-dirs ["src" "test"]
+^{:watch-dirs ["src"]
   :css-dirs ["resources/public"]
   :auto-testing true}
 {:main tetrisrf.core
- :source-map true
+ :source-map "target/public/cljs-out/prod-main.js.map"
  :infer-externs true
  :npm-deps false
  :foreign-libs [{:file "dist/index_bundle.js"

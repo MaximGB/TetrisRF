@@ -4,7 +4,8 @@
             [re-frame.core :as rf]
             [tetrisrf.re-service.core :refer [def-re-service
                                               def-re-service-command
-                                              def-re-service-command-raw]]))
+                                              def-re-service-command-raw]
+                                      :include-macros true]))
 
 
 (def rf-checkpoint (volatile! nil))
