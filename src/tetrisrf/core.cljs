@@ -7,7 +7,10 @@
 
 
 (defn ^:after-load -main []
-  (reagent/render [tetris-panel] (.getElementById js/document "app")))
+  (reagent/render [:div
+                   [:h1.ui.blue.header.centered "Tetris example."]
+                   [tetris-panel]]
+                  (.getElementById js/document "app")))
 
 
 (.addEventListener js/window "load" (fn [] (-main)))

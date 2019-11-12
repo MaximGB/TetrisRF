@@ -38,7 +38,10 @@
    (tetris-panel (gensym "tetris-panel-")))
   ([db-path]
    (let [itm (xs/interpreter-start! (xs/interpreter! db-path machine))
-         state-sub (xs/isubscribe-state itm)]
+         state-sub (xs/isubscribe-state itm)
+         score-sub (rf/subscribe [:tetrisrf.core/score itm])
+         level-sub (rf/subscribe [:tetrisrf.core/level itm])
+         next-field-sub (rf/subscribe [:tetrisrf.core/next-tetramino-field itm])]
      (reagent/create-class
       {:display-name "Tetris"
 
@@ -49,6 +52,7 @@
                            :on-key-down (fn [e]
                                           (.preventDefault e)
                                           (dispatch-key-event itm e game-keys))}
+
                           [:div.tetris-panel.ui.four.column.centered.grid
 
                            ;; Game panel
@@ -59,9 +63,9 @@
                              [:div.ui.raised.segment.field-frame
                               [game-field (rf/subscribe [:tetrisrf.core/field itm])]]]
                             [:div.column.two.wide
-                             [score-panel (rf/subscribe [:tetrisrf.core/score itm])]
-                             [level-panel (rf/subscribe [:tetrisrf.core/level itm])]
-                             [next-panel  (rf/subscribe [:tetrisrf.core/next-tetramino-field itm])]]]]
+                             [score-panel score-sub]
+                             [level-panel level-sub]
+                             [next-panel next-field-sub]]]]
 
                           ;; Floats
                           [:div.tetris-floats
@@ -71,6 +75,10 @@
                               [:div.header
                                "Game over!"]
                               [:div.content
+                               "Your score is: "
+                               [:div.ui.circular.blue.label
+                                @score-sub]
+                               " points. "
                                "Press Enter to restart."]]
 
                              :ready
