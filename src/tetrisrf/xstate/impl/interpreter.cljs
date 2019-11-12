@@ -26,7 +26,7 @@
   (let [interceptors (machine/machine->interceptors machine)]
     (last (areduce actions idx result [#{} []]
                    (-> (aget actions idx)
-                       ((fn [action]
+                       ((fn [^js/Object action]
                           (get interceptors (.-exec action))))
                        ((fn [action-interceptors]
                           (let [[result-interceptors-set result-interceptors-vec] result
@@ -44,7 +44,7 @@
    :before (fn [re-ctx]
              (let [*interpreter (utils/re-ctx->*interpreter re-ctx)
                    xs-state (protocols/interpreter->state *interpreter)
-                   actions (.-actions xs-state)]
+                   actions (.-actions ^js/XState.State xs-state)]
                (execute-transition-actions re-ctx actions)))))
 
 
@@ -62,7 +62,7 @@
                  (let [interpreter-state (protocols/interpreter->state interpreter)
                        new-db (assoc-in db
                                         (conj interpreter-path :tetrisrf.xstate.core/state)
-                                        (.-value interpreter-state))]
+                                        (.-value ^js/XState.State interpreter-state))]
                    (-> re-ctx
                        (rf/assoc-coeffect #_re-ctx :db new-db)
                        (rf/assoc-effect #_re-ctx :db new-db)))
@@ -136,13 +136,15 @@
               xs-machine (machine/machine->xs-machine machine)
               xs-event-type (utils/re-ctx->xs-event-type re-ctx)
               xs-current-state (protocols/interpreter->state this)
-              xs-new-state (if xs-current-state
-                             (.transition xs-machine
-                                          (.from xs/State xs-current-state re-ctx)
-                                          ;; Only type is needed for XState to make transition
-                                          ;; Event payload handlers will take from `re-ctx` afterwards
-                                          (clj->js xs-event-type))
-                             (.-initialState (.withContext xs-machine re-ctx)))
+              xs-new-state ^js/XState.State (if xs-current-state
+                                              (.transition ^js/XState.StateNode xs-machine
+                                                           (.from ^js/XState.State xs/State xs-current-state re-ctx)
+                                                           ;; Only type is needed for XState to make transition
+                                                           ;; Event payload handlers will take from `re-ctx` afterwards
+                                                           (clj->js xs-event-type))
+                                              (.-initialState (^js/XState.StateNode .withContext
+                                                                                     ^js/XState.StateNode xs-machine
+                                                                                     re-ctx)))
               actions (.-actions xs-new-state)
               interceptors (machine-actions->interceptors machine actions)]
           (vswap! *interpreter
