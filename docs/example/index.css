@@ -1,0 +1,46 @@
+#app .tetris-container {
+    position: relative;
+}
+
+#app .tetris-floats {
+    position: absolute;
+    top: 20%;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+#app .tetris-floats .modal {
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+#app div.input {
+    margin-bottom: 1em;
+}
+
+#app div.input div.label {
+    min-width: 5em;
+}
+
+#app .field-frame {
+    padding: 1px !important;
+}
+
+#app .next-field div.label {
+    height: 2.63em;
+}
+
+#app .next-field .field-frame {
+    border: 1px solid rgba(34,36,38,.15);
+}
+
+#app .close.icon {
+    color: black;
+}
+
+#app .card-score {
+    font-weight: 700;
+    color: red;
+}

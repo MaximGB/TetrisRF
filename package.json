@@ -11,10 +11,10 @@
     "url": "git+https://github.com/MaximGB/TetrisRF.git"
   },
   "keywords": [
-      "re-frame",
-      "xstate",
-      "tetris",
-      "clojurescript"
+    "re-frame",
+    "xstate",
+    "tetris",
+    "clojurescript"
   ],
   "author": "Maxim Bazhenov",
   "license": "",

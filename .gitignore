@@ -10,10 +10,6 @@ pom.xml.asc
 /resources/public/semantic
 /node_modules/
 /dist/
-.lein-deps-sum
-.lein-repl-history
-.lein-plugins/
-.lein-failures
 .nrepl-port
 .cpcache/
 .rebel_readline_history

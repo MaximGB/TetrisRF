@@ -10,7 +10,7 @@
                               com.bhauman/figwheel-main {:mvn/version "0.2.3"}}
                  :extra-paths ["target"]}
 
-           :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r" "-s" "localhost:9501"]
+           :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                    :extra-paths ["test"]}
 
            :min   {:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]}}}
