@@ -1,9 +1,9 @@
 # Tetris written with ClojureScript/re-frame
 
-The project is my atempt to get acquainted with re-frame library which resulted in two libraries birth:
+The project was initiated to get better acquainted with re-frame library, as the result two other libraries have been developed:
 
-- maximgb.re-service - a universal way to translate re-frame effect requests into function calls
-- maximgb.re-state   - a component isolation and re-frame event handling with Hoare statecharts currently backed
+- maximgb.re-service - a universal way to translate re-frame co-effect/effect requests into function calls
+- maximgb.re-state   - a component isolation and re-frame event handling with Hoare statecharts, currently backed
                        by JavaScript [XState](https://xstate.js.org) library.
 
 (at the moment of writing the libraries are not yet moved into a separate repositories, but that's a matter of days)
