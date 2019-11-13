@@ -216,7 +216,7 @@
                       level)
 
              :next-level-score (if level-up
-                                 (calc-next-level-score score)
+                                 (calc-next-level-score next-level-score)
                                  next-level-score)
 
              :timer-interval (if level-up

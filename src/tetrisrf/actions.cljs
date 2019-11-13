@@ -233,7 +233,7 @@
 
 
 (defn calc-next-level-score [current-score]
-  (* current-score level-up-score-coef))
+  (+ current-score (* current-score level-up-score-coef)))
 
 (defn calc-next-level-timer-interval [current-interval]
   (* current-interval level-up-timer-coef))
