@@ -19,7 +19,7 @@ $(PROD_JAR): package.lock ./deps.edn ./prod.cljs.edn ./src/**/*
 	npx webpack
 	clj -A\:fig\:min
 
-example: $(PROD_JAR) $(SEMANTIC_DIR) ./resources/public/index.css ./resources/public/index.html
+example: $(SEMANTIC_DIR) $(PROD_JAR) ./resources/public/index.css ./resources/public/index.html
 	mkdir -p docs/example
 	cp -R resources/public/* docs/example/
 	cp target/public/cljs-out/prod-main.js docs/example/index.js
