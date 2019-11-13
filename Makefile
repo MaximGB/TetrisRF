@@ -1,6 +1,7 @@
 TARGET = minbuild-predeploy
 SEMANTIC_DIR = ./resources/public/semantic
 PROD_JAR = ./target/public/cljs-out/prod-main.js
+EXAMPLE_DIR = ./docs/example
 
 .PHONY:	clean run gh run
 
@@ -19,7 +20,7 @@ $(PROD_JAR): package.lock ./deps.edn ./prod.cljs.edn ./src/**/*
 	npx webpack
 	clj -A\:fig\:min
 
-example: $(SEMANTIC_DIR) $(PROD_JAR) ./resources/public/index.css ./resources/public/index.html
+$(EXAMPLE_DIR): $(SEMANTIC_DIR) $(PROD_JAR) ./resources/public/index.css ./resources/public/index.html
 	mkdir -p docs/example
 	cp -R resources/public/* docs/example/
 	cp target/public/cljs-out/prod-main.js docs/example/index.js
@@ -32,4 +33,4 @@ run:
 	npx webpack
 	clj -A\:fig\:build
 
-$(TARGET): clean example
+$(TARGET): clean $(EXAMPLE_DIR)
