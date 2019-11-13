@@ -2,11 +2,11 @@
 
 The project was initiated to get better acquainted with re-frame library, as the result two other libraries have been developed:
 
-- maximgb.re-service - a universal way to translate re-frame co-effect/effect requests into function calls
+- [maximgb.re-service](https://github.com/MaximGB/re-service) - a universal way to translate re-frame co-effect/effect requests into function calls
 - maximgb.re-state   - a component isolation and re-frame event handling with Hoare statecharts, currently backed
                        by JavaScript [XState](https://xstate.js.org) library.
 
-(at the moment of writing the libraries are not yet moved into a separate repositories, but that's a matter of days)
+(at the moment of writing the re-state is not yet moved into a separate repository, but that's a matter of days)
 
 ## Demo
 
