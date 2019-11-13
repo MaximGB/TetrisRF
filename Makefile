@@ -29,7 +29,7 @@ $(EXAMPLE_DIR): $(SEMANTIC_DIR) $(PROD_JAR) ./resources/public/index.css ./resou
 gh: $(TARGET)
 	git push -n origin HEAD
 
-run:
+run: $(SEMANTIC_DIR)
 	npx webpack
 	clj -A\:fig\:build
 

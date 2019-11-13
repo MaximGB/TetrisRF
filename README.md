@@ -23,6 +23,5 @@ The resulting and playable demo can be found [here](https://maximgb.github.io/Te
 ```shell
 git clone git@github.com:MaximGB/TetrisRF.git
 cd ./TetrisRF
-make npmi
 make run
 ```
