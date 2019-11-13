@@ -1,23 +1,25 @@
 TARGET = minbuild-predeploy
+SEMANTIC_DIR = ./resources/public/semantic
+PROD_JAR = ./target/public/cljs-out/prod-main.js
 
-.PHONY:	clean semantic compile example gh run
+.PHONY:	clean run gh run
 
 all : $(TARGET)
 
-npxi:
+package.lock: ./package.json
 	npm i
 
 clean:
-	rm -rf ./target/public/cljs-out/prod*
+	rm -rf ./target/*
 
-semantic:
+$(SEMANTIC_DIR): package.lock ./semantic.json semantic/**/*
 	cd ./semantic; npx gulp build; cd ..
 
-compile:
+$(PROD_JAR): package.lock ./deps.edn ./prod.cljs.edn ./src/**/*
 	npx webpack
 	clj -A\:fig\:min
 
-example:
+example: $(PROD_JAR) $(SEMANTIC_DIR) ./resources/public/index.css ./resources/public/index.html
 	mkdir -p docs/example
 	cp -R resources/public/* docs/example/
 	cp target/public/cljs-out/prod-main.js docs/example/index.js
@@ -26,8 +28,8 @@ example:
 gh: $(TARGET)
 	git push -n origin HEAD
 
-run: semantic
+run:
 	npx webpack
 	clj -A\:fig\:build
 
-$(TARGET): clean semantic compile example
+$(TARGET): clean example

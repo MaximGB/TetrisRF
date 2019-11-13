@@ -1,15 +1,19 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.0"}
         org.clojure/clojurescript {:mvn/version "1.10.520"}
-        org.clojure/core.async {:mvn/version "0.4.500"}
         reagent/reagent {:mvn/version "0.8.1"}
         re-frame/re-frame {:mvn/version "0.10.6"}
         net.mikera/core.matrix {:mvn/version "0.62.0"}
-        com.rpl/specter {:mvn/version "1.1.2"}}
+        com.rpl/specter {:mvn/version "1.1.2"}
+        maximgb/re-service {:mvn/version "0.1.1"}}
 
- :paths ["src" "resources" "target" "test"]
+ :paths ["src"]
 
  :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
                               com.bhauman/figwheel-main {:mvn/version "0.2.3"}}}
+
+           :test {:extra-deps {org.clojure/core.async {:mvn/version "0.4.500"}}
+
+                  :extra-paths ["resources" "target" "test"]}
 
            :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
 

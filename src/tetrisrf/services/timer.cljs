@@ -5,7 +5,7 @@
                                     set-timer-interval
                                     set-timer-tick-handler
                                     dispose-timer]]
-            [tetrisrf.re-service.core :as rs :include-macros true]))
+            [maximgb.re-service.core :as rs :include-macros true]))
 
 
 (def *timers (volatile! {}))
