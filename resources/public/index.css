@@ -38,6 +38,8 @@
 }
 
 #app .next-field .field-frame {
+    width: 120px;
+    height: 120px;
     border: 1px solid rgba(34,36,38,.15);
 }
 
