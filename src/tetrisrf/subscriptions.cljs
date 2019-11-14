@@ -1,5 +1,5 @@
 (ns tetrisrf.subscriptions
-  (:require [tetrisrf.xstate.core :as xs]))
+  (:require [maximgb.re-state.core :as xs]))
 
 (xs/reg-isub
  :tetrisrf.core/field

@@ -4,7 +4,8 @@
         re-frame/re-frame {:mvn/version "0.10.6"}
         net.mikera/core.matrix {:mvn/version "0.62.0"}
         com.rpl/specter {:mvn/version "1.1.2"}
-        maximgb/re-service {:mvn/version "0.1.1"}}
+        maximgb/re-service {:mvn/version "1.0.2"}
+        maximgb/re-state {:mvn/version "0.1.0"}}
 
  :paths ["src"]
 
@@ -13,7 +14,7 @@
 
            :test {:extra-deps {org.clojure/core.async {:mvn/version "0.4.500"}}
 
-                  :extra-paths ["resources" "target" "test"]}
+                  :extra-paths ["resources" "target"]}
 
            :build {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
 

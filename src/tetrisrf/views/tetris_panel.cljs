@@ -7,7 +7,7 @@
             [tetrisrf.views.next-panel :refer [next-panel]]
             [tetrisrf.views.score-panel :refer [score-panel]]
             [tetrisrf.machines.tetris-machine :refer [machine]]
-            [tetrisrf.xstate.core :as xs]))
+            [maximgb.re-state.core :as xs]))
 
 
 (defn build-key [e]

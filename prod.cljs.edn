@@ -3,8 +3,4 @@
   :auto-testing true}
 {:main tetrisrf.core
  :source-map "target/public/cljs-out/prod-main.js.map"
- :infer-externs true
- :npm-deps false
- :foreign-libs [{:file "dist/index_bundle.js"
-                 :provides ["xstate"]
-                 :global-exports {xstate XState}}]}
+ :npm-deps false}

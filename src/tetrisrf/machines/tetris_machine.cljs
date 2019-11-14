@@ -1,5 +1,5 @@
 (ns tetrisrf.machines.tetris-machine
-  (:require [tetrisrf.xstate.core :as xs]
+  (:require [maximgb.re-state.core :as xs]
             [tetrisrf.tetraminos :refer [tetraminos]]
             [tetrisrf.actions :refer [blend-tetramino
                                       calc-next-level-score

@@ -1,10 +1,6 @@
-^{:watch-dirs ["src" "test"]
+^{:watch-dirs ["src"]
   :css-dirs ["resources/public"]
   :auto-testing true}
 {:main tetrisrf.core
  :source-map true
- :infer-externs true
- :npm-deps false
- :foreign-libs [{:file "dist/index_bundle.js"
-                 :provides ["xstate"]
-                 :global-exports {xstate XState}}]}
+ :npm-deps false}
