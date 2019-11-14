@@ -2,6 +2,10 @@
     position: relative;
 }
 
+#app .field-frame {
+    width: 100%;
+}
+
 #app .tetris-floats {
     position: absolute;
     top: 20%;
