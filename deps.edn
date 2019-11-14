@@ -5,7 +5,7 @@
         net.mikera/core.matrix {:mvn/version "0.62.0"}
         com.rpl/specter {:mvn/version "1.1.2"}
         maximgb/re-service {:mvn/version "1.0.2"}
-        maximgb/re-state {:mvn/version "0.1.0"}}
+        maximgb/re-state {:mvn/version "0.3.0"}}
 
  :paths ["src"]
 

@@ -22,8 +22,9 @@ $(PROD_JAR): package.lock ./deps.edn ./prod.cljs.edn ./src/**/*
 $(EXAMPLE_DIR): $(SEMANTIC_DIR) $(PROD_JAR) ./resources/public/index.css ./resources/public/index.html
 	mkdir -p docs/example
 	cp -R resources/public/* docs/example/
-	cp target/public/cljs-out/prod-main.js docs/example/index.js
-	sed -i -e "s/cljs\-out\/dev\-main\.js/.\/index.js/" docs/example/index.html
+	cp target/public/cljs-out/prod-main.js docs/example/
+	cp target/public/cljs-out/prod-main.js.map docs/example/
+	sed -i -e "s/cljs\-out\/dev\-main\.js/.\/prod-main.js/" docs/example/index.html
 
 gh: $(TARGET)
 	git push -n origin HEAD

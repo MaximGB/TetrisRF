@@ -1,15 +1,7 @@
-pom.xml
-pom.xml.asc
-*.jar
-*.class
-/lib/
-/classes/
 /target/
-/checkouts/
 /semantic/
 /resources/public/semantic
 /node_modules/
-/dist/
 .nrepl-port
 .cpcache/
 .rebel_readline_history
