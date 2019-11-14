@@ -1,5 +1,8 @@
 #app .tetris-container {
     position: relative;
+}
+
+#app .tetris-panel {
     height: 438px;
 }
 
