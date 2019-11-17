@@ -3,9 +3,8 @@
         reagent/reagent {:mvn/version "0.8.1"}
         re-frame/re-frame {:mvn/version "0.10.6"}
         net.mikera/core.matrix {:mvn/version "0.62.0"}
-        com.rpl/specter {:mvn/version "1.1.2"}
-        maximgb/re-service {:mvn/version "1.0.2"}
-        maximgb/re-state {:mvn/version "0.3.0"}}
+        maximgb/re-service {:mvn/version "1.0.4"}
+        maximgb/re-state {:mvn/version "0.4.0-SNAPSHOT"}}
 
  :paths ["src"]
 
