@@ -3,4 +3,5 @@
   :auto-testing true}
 {:main tetrisrf.core
  :source-map true
+ :parallel-build true
  :npm-deps false}

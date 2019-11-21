@@ -1,5 +1,5 @@
 (ns tetrisrf.machines.tetris-machine
-  (:require [maximgb.re-state.core :as xs]
+  (:require [maximgb.re-state.core :as rs]
             [tetrisrf.tetraminos :refer [tetraminos]]
             [tetrisrf.actions :refer [blend-tetramino
                                       calc-next-level-score
@@ -16,10 +16,10 @@
                                       rotate-90ccw
                                       rotate-90cw]]
             [tetrisrf.services.timer :as timer]
-            [tetrisrf.db :refer [initial-db]]))
+            [tetrisrf.db :refer [initial-db]]
+            [maximgb.re-state.core :as xs]))
 
-
-(xs/def-machine
+(rs/def-machine
   machine
   {:id :tetris-machine
 
@@ -62,7 +62,7 @@
                                                     :actions :initialize-db}}}}})
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :initialize-db
   (fn [db]
@@ -71,12 +71,12 @@
         (assoc :next-tetramino (rand-nth tetraminos)))))
 
 
-(xs/def-action-ifx
+(rs/def-action-ifx
   machine
   :init-timer
-  [xs/cofx-instance [::timer/timer ::timer/create nil]]
+  [[rs/re-state-service :instance []] [::timer/timer ::timer/create nil]]
   (fn [cofx]
-    (let [i (xs/cofx-instance cofx)
+    (let [i (get-in cofx [rs/re-state-service :instance])
           db (:db cofx)
           timer (get-in cofx [::timer/timer ::timer/create])
           timer-id (gensym ::timer)]
@@ -86,10 +86,10 @@
        ::timer/timer [::timer/register [timer-id timer]
                       ::timer/start [timer-id]
                       ::timer/set-interval [timer-id (:timer-interval initial-db)]
-                      ::timer/set-tick-handler [timer-id #(xs/interpreter-send! i :tick)]]})))
+                      ::timer/set-tick-handler [timer-id #(rs/interpreter-send! i :tick)]]})))
 
 
-(xs/def-action-ifx
+(rs/def-action-ifx
   machine
   :dispose-timer
   (fn [cofx]
@@ -99,7 +99,7 @@
        ::timer/timer [::timer/unregister [timer-id]]})))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :place-next-tetramino
   (fn [db]
@@ -113,77 +113,77 @@
              :next-tetramino-field (place-tetramino-centered next-tetramino-field next-next-tetramino :center-v true)))))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-move-down?
   (fn [db]
     (can-act? (:field db) move-down)))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :move-down
   (fn [db]
     (update db :field move-down)))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-rotate-cw?
   (fn [db]
     (can-act? (:field db) rotate-90cw)))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :rotate-cw
   (fn [db]
     (update db :field rotate-90cw)))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-rotate-ccw?
   (fn [db]
     (can-act? (:field db) rotate-90ccw)))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :rotate-ccw
   (fn [db]
     (update db :field rotate-90ccw)))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-move-right?
   (fn [db]
     (can-act? (:field db) move-right)))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :move-right
   (fn [db]
     (update db :field move-right)))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-move-left?
   (fn [db]
     (can-act? (:field db) move-left)))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :move-left
   (fn [db]
     (update db :field move-left)))
 
 
-(xs/def-guard-idb
+(rs/def-guard-idb
   machine
   :can-place-next-tetramino?
   (fn [db]
@@ -193,7 +193,7 @@
       (can-act? field-blended #(place-tetramino-centered %1 next-tetramino)))))
 
 
-(xs/def-action-idb
+(rs/def-action-idb
   machine
   :blend-tetramino
   (fn [db]
@@ -224,16 +224,17 @@
                                timer-interval)))))
 
 
-(xs/def-action-ifx
+(rs/def-action-ifx
   machine
   :update-timer-interval
   (fn [cofx]
     {::timer/timer [::timer/set-interval [(get-in cofx [:db :timer-id]) (get-in cofx [:db :timer-interval])]]}))
 
 
-(xs/def-action-fx
+(rs/def-action-fx
   machine
   :re-send
-  [xs/cofx-instance]
+  [[rs/re-state-service :instance []]]
   (fn [cofx event]
-    {xs/fx-send (into [(xs/cofx-instance cofx)] event)}))
+    (let [i (get-in cofx [rs/re-state-service :instance])]
+      {xs/re-state-service [:send! (into [i] event)]})))

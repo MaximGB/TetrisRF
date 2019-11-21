@@ -3,4 +3,5 @@
   :auto-testing true}
 {:main tetrisrf.core
  :source-map "target/public/cljs-out/prod-main.js.map"
+ :parallel-build true
  :npm-deps false}
