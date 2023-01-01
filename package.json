@@ -24,8 +24,8 @@
   "homepage": "https://github.com/MaximGB/TetrisRF#readme",
   "devDependencies": {
     "semantic-ui": "^2.4.2",
-    "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.7",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
     "xstate": "^4.6.7"
   }
 }
